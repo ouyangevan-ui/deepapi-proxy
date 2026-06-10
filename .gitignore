@@ -1,0 +1,11 @@
+# 凭证文件 —— 绝对不提交！
+credentials.txt
+
+# 备份
+*.tar.gz
+*.bak
+
+# 临时文件
+*.tmp
+*.swp
+.DS_Store
