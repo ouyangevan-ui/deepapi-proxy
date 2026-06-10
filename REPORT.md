@@ -29,8 +29,8 @@
 | **站点** | `https://deepapi.click` |
 | **API 地址** | `https://deepapi.click/v1/chat/completions` |
 | **管理后台** | `https://deepapi.click` |
-| **管理账号** | `root` / `123456` |
-| **测试 Token** | `ROTATED_TOKEN_REMOVED` |
+| **管理账号** | root（密码见 credentials.txt） |
+| **测试 Token** | 见 credentials.txt |
 
 ---
 
@@ -90,19 +90,9 @@ one-api (Docker 容器)
 
 ---
 
-## 测试命令
+## 测试
 
-```bash
-# 公网测试
-curl -X POST https://deepapi.click/v1/chat/completions \
-  -H "Content-Type: application/json" \
-  -H "Authorization: Bearer ROTATED_TOKEN_REMOVED" \
-  -d '{
-    "model": "Qwen/Qwen2.5-7B-Instruct",
-    "messages": [{"role": "user", "content": "say hello"}],
-    "max_tokens": 10
-  }'
-```
+使用 credentials.txt 中的 Token 调用 API。公共文档中不暴露凭证。
 
 ---
 
