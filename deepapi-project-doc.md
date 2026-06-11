@@ -57,6 +57,13 @@ Do not enable open registration for the first customers.
    - Support contact
 7. Review usage and upstream cost daily.
 
+## Brand Safety
+
+Use the assets in `brand/` for the public logo, favicon, invoices, and customer
+emails. Avoid OpenAI logos, OpenAI-style knot/blossom marks, OpenAI Sans, or any
+copy that implies official partnership. "OpenAI-compatible API" is acceptable
+as a technical compatibility statement; do not make it the product identity.
+
 ## Starter Plans
 
 | Plan | Price | Included Usage | Overage |

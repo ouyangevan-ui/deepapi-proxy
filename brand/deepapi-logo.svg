@@ -1,0 +1,24 @@
+<svg width="640" height="160" viewBox="0 0 640 160" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="title desc">
+  <title id="title">DeepAPI logo</title>
+  <desc id="desc">DeepAPI wordmark with a distinct angular data-route icon.</desc>
+  <rect width="640" height="160" rx="24" fill="#08111F"/>
+  <g transform="translate(32 32)">
+    <rect x="0" y="0" width="96" height="96" rx="22" fill="#102033"/>
+    <path d="M22 28H45C62 28 74 40 74 56C74 72 62 84 45 84H22V28Z" fill="#24D6A5"/>
+    <path d="M37 43H46C54 43 59 48 59 56C59 64 54 69 46 69H37V43Z" fill="#08111F"/>
+    <path d="M21 18L78 18" stroke="#8EDBFF" stroke-width="8" stroke-linecap="round"/>
+    <path d="M78 18L63 33" stroke="#8EDBFF" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M78 18L63 3" stroke="#8EDBFF" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
+  </g>
+  <g fill="#F5F8FB">
+    <path d="M164.4 47.2H191.5C214.1 47.2 229.8 61.9 229.8 81.2C229.8 100.5 214.1 115.2 191.5 115.2H164.4V47.2ZM190.8 99.1C203.5 99.1 211.9 92.1 211.9 81.2C211.9 70.3 203.5 63.3 190.8 63.3H181.7V99.1H190.8Z"/>
+    <path d="M243.3 47.2H295.7V62.6H260.5V74.2H291.7V88.8H260.5V99.8H297.1V115.2H243.3V47.2Z"/>
+    <path d="M311.2 47.2H363.6V62.6H328.4V74.2H359.6V88.8H328.4V99.8H365V115.2H311.2V47.2Z"/>
+    <path d="M379.1 47.2H410.9C428.1 47.2 439.4 57.1 439.4 72.3C439.4 87.6 428.1 97.4 410.9 97.4H396.4V115.2H379.1V47.2ZM409.8 82.1C417.1 82.1 421.8 78.3 421.8 72.3C421.8 66.3 417.1 62.5 409.8 62.5H396.4V82.1H409.8Z"/>
+  </g>
+  <g fill="#24D6A5">
+    <path d="M466.6 47.2H483.2L512.4 115.2H493.8L488.6 101.8H460.5L455.3 115.2H437.3L466.6 47.2ZM482.9 87.1L474.6 65.6L466.2 87.1H482.9Z"/>
+    <path d="M522.8 47.2H554.6C571.8 47.2 583.1 57.1 583.1 72.3C583.1 87.6 571.8 97.4 554.6 97.4H540.1V115.2H522.8V47.2ZM553.5 82.1C560.8 82.1 565.5 78.3 565.5 72.3C565.5 66.3 560.8 62.5 553.5 62.5H540.1V82.1H553.5Z"/>
+    <path d="M596.5 47.2H613.8V115.2H596.5V47.2Z"/>
+  </g>
+</svg>

@@ -17,6 +17,8 @@ provider keys, or customer API tokens in this repository.
 - Public docs no longer instruct operators to open registration or grant free
   signup credit.
 - Manual billing and onboarding SOP has been added.
+- A distinct DeepAPI brand asset set has been added under `brand/` to avoid
+  OpenAI-style logo or trade dress confusion.
 
 ## Manual Items Before First Customer
 
@@ -27,6 +29,8 @@ provider keys, or customer API tokens in this repository.
 5. Do one restore test from `/root/backup/deepapi`.
 6. Prepare a private customer ledger.
 7. Keep registration closed and create users manually after payment.
+8. Apply the DeepAPI logo from `brand/` in one-api admin settings or on the
+   public landing page before promotion.
 
 ## First Customer Go/No-Go
 

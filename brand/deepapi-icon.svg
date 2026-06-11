@@ -1,0 +1,11 @@
+<svg width="128" height="128" viewBox="0 0 128 128" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="title desc">
+  <title id="title">DeepAPI icon</title>
+  <desc id="desc">Angular D-shaped data route icon for DeepAPI.</desc>
+  <rect width="128" height="128" rx="28" fill="#08111F"/>
+  <rect x="18" y="18" width="92" height="92" rx="24" fill="#102033"/>
+  <path d="M36 42H63C82 42 95 55 95 72C95 89 82 102 63 102H36V42Z" fill="#24D6A5"/>
+  <path d="M53 59H63C72 59 78 64 78 72C78 80 72 85 63 85H53V59Z" fill="#08111F"/>
+  <path d="M29 28H92" stroke="#8EDBFF" stroke-width="9" stroke-linecap="round"/>
+  <path d="M92 28L76 44" stroke="#8EDBFF" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M92 28L76 12" stroke="#8EDBFF" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

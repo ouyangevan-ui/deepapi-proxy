@@ -15,6 +15,7 @@ commercial mode is manual payment plus manual one-api account provisioning.
 | `deepapi-project-doc.md` | Production runbook |
 | `MANUAL-BILLING-SOP.md` | Manual payment and onboarding process |
 | `FINAL-REPORT.md` | Launch readiness summary |
+| `brand/` | Distinct DeepAPI logo and favicon assets |
 
 ## Security State
 
@@ -26,6 +27,8 @@ commercial mode is manual payment plus manual one-api account provisioning.
 - VPS SSH should be key-only.
 - Upstream provider keys should stay out of Git.
 - Docker image is pinned by digest.
+- Public branding should use the DeepAPI assets in `brand/`, not OpenAI-like
+  marks or visual language.
 
 ## Manual Revenue Path
 
