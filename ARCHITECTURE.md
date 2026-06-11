@@ -28,7 +28,7 @@
 │                              │ TCP :3000 (localhost only)          │
 │                              ▼                                     │
 │  ┌──────────────────────────────────────────────────────────────┐ │
-│  │  one-api (Docker, ghcr.io/songquanpeng/one-api:latest)       │ │
+│  │  one-api (Docker, pinned ghcr.io/songquanpeng/one-api digest)│ │
 │  │                                                                │ │
 │  │  ┌──────────┐  ┌──────────┐  ┌──────────┐  ┌─────────────┐  │ │
 │  │  │ 用户管理  │  │ 模型路由  │  │ 计费引擎  │  │ 渠道池管理  │  │ │
@@ -258,7 +258,7 @@ tar -czf one-api-backup-$(date +%Y%m%d).tar.gz /opt/one-api/data
 ### 6.3 更新流程
 
 ```bash
-docker pull ghcr.io/songquanpeng/one-api:latest
+docker pull ghcr.io/songquanpeng/one-api@sha256:a55fb5181854aa0823cc04797ee875dfc5a953c0deb5e7e7ec39a8148e70cbc3
 docker stop one-api
 docker rm one-api
 # 重新运行 deploy.sh 中的 docker run 命令
