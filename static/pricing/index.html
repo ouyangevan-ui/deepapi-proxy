@@ -1,0 +1,492 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>DeepAPI Pricing</title>
+  <meta name="description" content="DeepAPI pricing for everyday and advanced API usage. Pay only for what you use.">
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #020915;
+      --panel: rgba(8, 18, 33, 0.88);
+      --panel-strong: rgba(7, 25, 36, 0.96);
+      --line: rgba(142, 219, 255, 0.18);
+      --line-green: rgba(36, 214, 165, 0.72);
+      --line-blue: rgba(35, 160, 255, 0.72);
+      --ink: #f7fbff;
+      --muted: #b7c2cf;
+      --soft: #8290a2;
+      --green: #32eba9;
+      --blue: #2aa7ff;
+      --shadow-green: rgba(36, 214, 165, 0.2);
+      --shadow-blue: rgba(35, 160, 255, 0.18);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background:
+        radial-gradient(circle at 50% -10%, rgba(36, 214, 165, 0.18), transparent 30rem),
+        radial-gradient(circle at 80% 30%, rgba(35, 160, 255, 0.16), transparent 28rem),
+        linear-gradient(180deg, #010713 0%, var(--bg) 55%, #020713 100%);
+      color: var(--ink);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      line-height: 1.5;
+    }
+
+    main {
+      width: min(100% - 32px, 1280px);
+      margin: 0 auto;
+      padding: 28px 0 32px;
+    }
+
+    .brand {
+      display: flex;
+      justify-content: center;
+      margin-bottom: 18px;
+    }
+
+    .brand img {
+      width: min(280px, 70vw);
+      height: auto;
+      padding: 10px 16px;
+      border-radius: 18px;
+      background: rgba(255, 255, 255, 0.96);
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.38);
+    }
+
+    .hero {
+      text-align: center;
+      margin-bottom: 30px;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: clamp(2.45rem, 6vw, 4.6rem);
+      line-height: 1.03;
+      letter-spacing: -0.035em;
+      text-wrap: balance;
+    }
+
+    h1 span {
+      color: var(--green);
+    }
+
+    .subtitle {
+      margin: 14px auto 0;
+      max-width: 58ch;
+      color: var(--muted);
+      font-size: clamp(1.05rem, 2vw, 1.35rem);
+    }
+
+    .pricing-grid {
+      display: grid;
+      grid-template-columns: minmax(210px, 0.66fr) minmax(270px, 1.17fr) minmax(270px, 1.17fr);
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      overflow: hidden;
+      background: linear-gradient(180deg, rgba(7, 17, 31, 0.92), rgba(4, 12, 23, 0.92));
+      box-shadow: 0 24px 80px rgba(0, 0, 0, 0.3);
+    }
+
+    .cell {
+      min-height: 104px;
+      padding: 28px 32px;
+      border-right: 1px solid var(--line);
+      border-bottom: 1px solid var(--line);
+      display: flex;
+      align-items: center;
+    }
+
+    .cell:nth-child(3n) {
+      border-right: 0;
+    }
+
+    .cell:nth-last-child(-n + 3) {
+      border-bottom: 0;
+    }
+
+    .label-head,
+    .label {
+      background: rgba(8, 18, 33, 0.72);
+      color: var(--ink);
+      font-weight: 800;
+    }
+
+    .label {
+      gap: 18px;
+      align-items: flex-start;
+    }
+
+    .label svg {
+      flex: 0 0 auto;
+      width: 24px;
+      height: 24px;
+      margin-top: 4px;
+      color: #a7b5c8;
+    }
+
+    .label small {
+      display: block;
+      margin-top: 2px;
+      color: var(--muted);
+      font-size: 1rem;
+      font-weight: 500;
+    }
+
+    .plan-head {
+      gap: 20px;
+      background: var(--panel-strong);
+    }
+
+    .plan-head.everyday {
+      border-left: 1px solid var(--line-green);
+      border-top: 1px solid var(--line-green);
+      box-shadow: inset 0 0 54px var(--shadow-green);
+    }
+
+    .plan-head.advanced {
+      border-left: 1px solid var(--line-blue);
+      border-top: 1px solid var(--line-blue);
+      box-shadow: inset 0 0 54px var(--shadow-blue);
+    }
+
+    .badge {
+      display: grid;
+      place-items: center;
+      width: 78px;
+      height: 78px;
+      border-radius: 999px;
+      color: var(--green);
+      background: radial-gradient(circle at 34% 30%, rgba(50, 235, 169, 0.55), rgba(18, 123, 88, 0.62));
+      border: 1px solid rgba(50, 235, 169, 0.32);
+    }
+
+    .advanced .badge {
+      color: var(--blue);
+      background: radial-gradient(circle at 34% 30%, rgba(42, 167, 255, 0.5), rgba(10, 58, 112, 0.68));
+      border-color: rgba(42, 167, 255, 0.32);
+    }
+
+    .plan-title {
+      margin: 0;
+      font-size: clamp(1.6rem, 3vw, 2rem);
+      letter-spacing: -0.02em;
+    }
+
+    .plan-copy {
+      margin: 4px 0 0;
+      color: var(--muted);
+      font-size: 1.05rem;
+    }
+
+    .price-cell {
+      justify-content: center;
+      text-align: center;
+      background: rgba(6, 18, 29, 0.7);
+    }
+
+    .price {
+      font-size: clamp(2.1rem, 4vw, 2.8rem);
+      line-height: 1;
+      font-weight: 900;
+      letter-spacing: -0.03em;
+    }
+
+    .price.green {
+      color: var(--green);
+    }
+
+    .price.blue {
+      color: var(--blue);
+    }
+
+    .unit {
+      margin-top: 8px;
+      color: var(--muted);
+      font-size: 1.1rem;
+    }
+
+    .best-for {
+      align-items: flex-start;
+    }
+
+    .best-for ul {
+      margin: 0;
+      padding: 0;
+      list-style: none;
+      display: grid;
+      gap: 10px;
+      color: var(--ink);
+      font-size: 1.05rem;
+    }
+
+    .best-for li {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+    }
+
+    .check-green,
+    .check-blue {
+      font-weight: 900;
+    }
+
+    .check-green {
+      color: var(--green);
+    }
+
+    .check-blue {
+      color: var(--blue);
+    }
+
+    .calculator {
+      display: grid;
+      grid-template-columns: 1.15fr 1fr 1fr;
+      gap: 0;
+      margin-top: 18px;
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      overflow: hidden;
+      background: rgba(8, 18, 33, 0.84);
+      box-shadow: inset 0 0 54px rgba(142, 219, 255, 0.06);
+    }
+
+    .calc-cell {
+      min-height: 104px;
+      padding: 26px 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-right: 1px solid var(--line);
+    }
+
+    .calc-cell:last-child {
+      border-right: 0;
+    }
+
+    .calc-lede {
+      justify-content: flex-start;
+      gap: 18px;
+    }
+
+    .calc-icon {
+      display: grid;
+      place-items: center;
+      width: 64px;
+      height: 64px;
+      border-radius: 999px;
+      background: rgba(36, 214, 165, 0.15);
+      border: 1px solid rgba(36, 214, 165, 0.45);
+      color: var(--green);
+    }
+
+    .calc-title {
+      margin: 0;
+      font-size: 1.1rem;
+      font-weight: 800;
+    }
+
+    .calc-copy {
+      margin: 4px 0 0;
+      color: var(--muted);
+    }
+
+    .chat-count {
+      font-size: clamp(2rem, 4vw, 2.6rem);
+      line-height: 1;
+      font-weight: 900;
+      letter-spacing: -0.03em;
+    }
+
+    .chat-copy {
+      margin-top: 8px;
+      color: var(--muted);
+      font-size: 1.05rem;
+    }
+
+    .footnote {
+      margin: 18px 0 0;
+      color: var(--soft);
+      text-align: center;
+      font-size: 0.95rem;
+    }
+
+    .api-note {
+      margin: 24px auto 0;
+      max-width: 840px;
+      color: var(--muted);
+      text-align: center;
+      font-size: 0.98rem;
+    }
+
+    @media (max-width: 900px) {
+      main {
+        width: min(100% - 24px, 760px);
+        padding-top: 22px;
+      }
+
+      .pricing-grid,
+      .calculator {
+        display: block;
+      }
+
+      .cell,
+      .calc-cell {
+        border-right: 0;
+        border-bottom: 1px solid var(--line);
+      }
+
+      .cell:last-child,
+      .calc-cell:last-child {
+        border-bottom: 0;
+      }
+
+      .label-head {
+        display: none;
+      }
+
+      .label {
+        min-height: auto;
+        padding: 18px 22px;
+      }
+
+      .price-cell {
+        justify-content: flex-start;
+        text-align: left;
+      }
+    }
+
+    @media (max-width: 560px) {
+      main {
+        width: min(100% - 18px, 520px);
+      }
+
+      .brand img {
+        width: min(230px, 78vw);
+      }
+
+      .cell,
+      .calc-cell {
+        padding: 22px 20px;
+      }
+
+      .plan-head {
+        align-items: flex-start;
+      }
+
+      .badge {
+        width: 58px;
+        height: 58px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <header class="hero" aria-labelledby="pricing-title">
+      <div class="brand">
+        <img src="/brand/deepapi-logo.png" alt="DeepAPI">
+      </div>
+      <h1 id="pricing-title">Simple. <span>Transparent.</span> Affordable.</h1>
+      <p class="subtitle">Pay only for what you use. No hidden fees.</p>
+    </header>
+
+    <section class="pricing-grid" aria-label="DeepAPI model pricing">
+      <div class="cell label-head">Model</div>
+      <div class="cell plan-head everyday">
+        <div class="badge" aria-hidden="true">
+          <svg viewBox="0 0 24 24" width="42" height="42" fill="currentColor"><path d="M13.8 2.6 5.7 13.2c-.5.7 0 1.8.9 1.8h4.2l-1.4 6.1c-.3 1.1 1.1 1.7 1.8.8l8.1-10.6c.5-.7 0-1.8-.9-1.8h-4.2l1.4-6.1c.3-1.1-1.1-1.7-1.8-.8Z"/></svg>
+        </div>
+        <div>
+          <h2 class="plan-title">Everyday</h2>
+          <p class="plan-copy">Fast. Reliable. Cost-effective.</p>
+        </div>
+      </div>
+      <div class="cell plan-head advanced">
+        <div class="badge" aria-hidden="true">
+          <svg viewBox="0 0 24 24" width="42" height="42" fill="currentColor"><path d="M20.8 3.2c-4.5.4-8.1 1.9-10.7 4.5L7.8 10l-3.4.6c-.5.1-.9.4-1.1.9L2 15.2l4-1.1 3.9 3.9-1.1 4 3.7-1.3c.5-.2.8-.6.9-1.1l.6-3.4 2.3-2.3c2.6-2.6 4.1-6.2 4.5-10.7ZM15 11.4a2.4 2.4 0 1 1 0-4.8 2.4 2.4 0 0 1 0 4.8Z"/></svg>
+        </div>
+        <div>
+          <h2 class="plan-title">Advanced</h2>
+          <p class="plan-copy">Stronger reasoning. More power.</p>
+        </div>
+      </div>
+
+      <div class="cell label">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="m7 8 5-5 5 5M7 16l5 5 5-5M3 12h18"/></svg>
+        <div>Input <small>per 1M tokens</small></div>
+      </div>
+      <div class="cell price-cell"><div><div class="price green">$0.22</div><div class="unit">/ 1M tokens</div></div></div>
+      <div class="cell price-cell"><div><div class="price blue">$0.66</div><div class="unit">/ 1M tokens</div></div></div>
+
+      <div class="cell label">
+        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M13 2 4 14h6l-1 8 10-13h-6l0-7Z"/></svg>
+        <div>Cache Hit <small>per 1M tokens</small></div>
+      </div>
+      <div class="cell price-cell"><div><div class="price green">$0.015</div><div class="unit">/ 1M tokens</div></div></div>
+      <div class="cell price-cell"><div><div class="price blue">$0.025</div><div class="unit">/ 1M tokens</div></div></div>
+
+      <div class="cell label">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M7 7h10l-3-3M17 17H7l3 3M17 7l-10 10"/></svg>
+        <div>Output <small>per 1M tokens</small></div>
+      </div>
+      <div class="cell price-cell"><div><div class="price green">$0.45</div><div class="unit">/ 1M tokens</div></div></div>
+      <div class="cell price-cell"><div><div class="price blue">$1.32</div><div class="unit">/ 1M tokens</div></div></div>
+
+      <div class="cell label">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="m12 3 2.8 5.7 6.2.9-4.5 4.4 1.1 6.2L12 17.3l-5.6 2.9 1.1-6.2L3 9.6l6.2-.9L12 3Z"/></svg>
+        <div>Best for</div>
+      </div>
+      <div class="cell best-for">
+        <ul>
+          <li><span class="check-green">✓</span> Chat and Q&amp;A</li>
+          <li><span class="check-green">✓</span> Content generation</li>
+          <li><span class="check-green">✓</span> Translation and summary</li>
+          <li><span class="check-green">✓</span> Customer support</li>
+        </ul>
+      </div>
+      <div class="cell best-for">
+        <ul>
+          <li><span class="check-blue">✓</span> Complex reasoning</li>
+          <li><span class="check-blue">✓</span> Code generation</li>
+          <li><span class="check-blue">✓</span> Agents and automation</li>
+          <li><span class="check-blue">✓</span> Data analysis</li>
+        </ul>
+      </div>
+    </section>
+
+    <section class="calculator" aria-label="Estimated usage with a ten dollar balance">
+      <div class="calc-cell calc-lede">
+        <div class="calc-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" width="34" height="34" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 7h8M8 11h2M12 11h2M16 11h0M8 15h2M12 15h2M16 15h0"/></svg>
+        </div>
+        <div>
+          <p class="calc-title">How much can you do?</p>
+          <p class="calc-copy">Estimated usage with $10 balance</p>
+        </div>
+      </div>
+      <div class="calc-cell">
+        <div>
+          <div class="chat-count" style="color: var(--green);">≈ 15,000</div>
+          <div class="chat-copy">standard chats*</div>
+        </div>
+      </div>
+      <div class="calc-cell">
+        <div>
+          <div class="chat-count" style="color: var(--blue);">≈ 5,000</div>
+          <div class="chat-copy">advanced chats*</div>
+        </div>
+      </div>
+    </section>
+
+    <p class="footnote">*Based on 1K input tokens and 1K output tokens per chat. Actual usage may vary.</p>
+    <p class="api-note">Everyday maps to DeepSeek V4 Flash. Advanced maps to DeepSeek V4 Pro. Prices are usage-based and may be adjusted if upstream provider costs change.</p>
+  </main>
+</body>
+</html>

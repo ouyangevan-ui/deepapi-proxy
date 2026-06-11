@@ -9,6 +9,7 @@ credentials.txt
 *.p12
 *.db
 *.sqlite
+*.evidence
 
 # Backups
 *.tar.gz

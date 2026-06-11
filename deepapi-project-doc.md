@@ -1,92 +1,141 @@
 # DeepAPI Production Runbook
 
-DeepAPI is an OpenAI-compatible API gateway backed by lower-cost model
-providers. The first revenue mode is manual payment plus manual one-api account
-provisioning.
+DeepAPI remains pre-launch until every required row in
+`PRODUCTION-READINESS.md` is GO.
 
 ## Deploy
 
-Run from the VPS as root:
+Before deploying, provision `/etc/deepapi/backup.env` as a root-owned `0600`
+regular file
+containing the offsite mount path, public `age` recipient, database path, and
+retention period. Keep private decryption material off the VPS and out of Git.
+Confirm the offsite path is a separate mount with `findmnt`.
+
+Before updating an existing container, complete a human-observed offsite
+transfer and disposable-host restore drill. Copy
+`ops/predeploy-backup.evidence.example` to
+`/etc/deepapi/predeploy-backup.evidence`, record only non-sensitive evidence,
+including the restored backup SHA-256 and references to the offsite-transfer
+and restore audit records; set root ownership and mode `0600`, and set a short
+expiry. The deployment gate rejects missing, stale, non-root, permissive,
+failed, untraceable, or wrong-mount evidence.
+It then creates and checksum-verifies a fresh encrypted backup before stopping
+the existing container. This evidence file is an accountable manual attestation,
+not automatic proof of recoverability.
+
+Run from the checked-out repository as root:
 
 ```bash
-cd /root/deepapi-proxy
-DOMAIN=deepapi.click ADMIN_EMAIL=admin@example.com bash deploy.sh
+DOMAIN=your-domain.example ADMIN_EMAIL=admin@your-domain.example bash deploy.sh
 ```
 
-The deploy script:
+Set `ENABLE_WWW=1` only after the `www` DNS name resolves to this service.
 
+The script:
+
+- requires an explicit valid domain and renders the Nginx template;
 - binds one-api to `127.0.0.1:3000`;
-- installs the hardened Nginx config;
-- installs the Nginx rate-limit zones;
-- enables UFW for SSH, HTTP, and HTTPS only;
-- configures Docker log rotation;
-- creates a daily local backup cron.
+- pins the one-api image by digest;
+- configures per-container log rotation without replacing Docker daemon config;
+- keeps the previous container until the replacement is healthy;
+- requires a successful encrypted offsite backup before replacing an existing
+  container and requires current manual offsite-transfer/restore evidence;
+- installs consistent encrypted backup, restore verification, and health-check
+  scripts;
+- installs and serves the repository-managed DeepAPI logo, icon, and favicon;
+- installs cron schedules for local health checks and encrypted offsite backup.
 
-## Verify After Deploy
+## Verify Deployment
 
 ```bash
 nginx -t
-docker ps --filter name=one-api
-ss -ltnp | grep 3000
+deepapi-healthcheck
+ss -ltnp
 ufw status verbose
-curl -I https://deepapi.click
+findmnt -T "$BACKUP_OFFSITE_DIR"
+deepapi-backup
+deepapi-restore-verify /path/to/encrypted-backup
+curl -fsSI "https://${DOMAIN}/brand/deepapi-logo.svg"
+curl -fsSI "https://${DOMAIN}/brand/deepapi-icon.svg"
+curl -fsSI "https://${DOMAIN}/favicon.svg"
 ```
 
-Expected:
+Do not treat these commands alone as launch approval. Attach redacted outputs
+and drill notes to the matching production-readiness gates.
 
-- `3000` appears only as `127.0.0.1:3000`.
-- UFW allows SSH, 80, and 443 only.
-- HTTPS responses include `Strict-Transport-Security`.
-- Registration is disabled unless a paid user is being manually onboarded.
+## Brand Application
 
-## Manual Paid User Flow
+Nginx serves stable brand asset URLs and overrides one-api's fallback
+`/logo.png` and `/favicon.ico` paths. An administrator must still set the
+one-api System Name and Logo URL, then review Homepage, About, and Footer.
+Follow [`brand/APPLICATION.md`](brand/APPLICATION.md) for exact values and
+visual verification steps. Repository changes do not prove the live settings
+were applied.
 
-Do not enable open registration for the first customers.
+Use only the assets in `brand/` for public branding, invoices, and customer
+emails. Do not use OpenAI logos, OpenAI-style knot/blossom marks, OpenAI Sans,
+or copy that implies an official relationship.
 
-1. Receive payment by Stripe Payment Link, PayPal, Wise, or bank transfer.
-2. Record the payment in a private customer ledger.
-3. Create or enable the user in one-api.
-4. Add prepaid balance/quota for the purchased plan.
-5. Generate an API key for that customer.
-6. Send the customer privately:
-   - Base URL: `https://deepapi.click/v1`
-   - API key
-   - Enabled models
-   - Purchased quota
-   - Expiration or renewal date
-   - Support contact
-7. Review usage and upstream cost daily.
+## Account And Billing Mode
 
-## Brand Safety
+Keep open registration and free signup credit disabled. After payment is
+confirmed, create one manually approved account with explicit balance, quota,
+rate limit, enabled models, and expiry. Reconcile input tokens, output tokens,
+gateway deductions, and upstream invoice cost.
 
-Use the assets in `brand/` for the public logo, favicon, invoices, and customer
-emails. Avoid OpenAI logos, OpenAI-style knot/blossom marks, OpenAI Sans, or any
-copy that implies official partnership. "OpenAI-compatible API" is acceptable
-as a technical compatibility statement; do not make it the product identity.
+Do not advertise any plan until the private cost model passes every scenario in
+`COST-MODEL.md` and policies pass `POLICIES-GATE.md`.
 
-## Starter Plans
+Launch accounts expose only `deepseek-v4-flash`, `deepseek-v4-pro`, and,
+after provider approval, `deepapi-vision`. DeepSeek models are text only; image
+analysis requires the explicit `deepapi-vision` model and must never be hidden
+behind a DeepSeek model name. `deepseek-chat` and `deepseek-reasoner` are
+retiring upstream aliases and must not be enabled for new accounts. Follow
+`MODEL-CONTRACT-OPERATIONS.md` for the isolated migration-group policy and the
+earlier DeepAPI cutoff of 2026-07-17 15:59 UTC.
 
-| Plan | Price | Included Usage | Overage |
-| --- | ---: | ---: | ---: |
-| Starter | $9.90/mo | 50M tokens | $0.60/M |
-| Pro | $29/mo | 300M tokens | $0.45/M |
-| Scale | $99/mo | 1.2B tokens | $0.35/M |
+## Logging And Privacy
 
-No unlimited plans. No free trial without payment, verified email, and abuse
-controls.
+The service is not log-free. one-api usage records, Nginx access/error logs,
+Docker logs, host journal entries, payment records, and upstream provider logs
+may exist. Do not log request or response bodies unless explicitly approved.
+Restrict log access, set retention/deletion periods, and ensure public privacy
+language matches actual behavior.
 
-## Backup
+## Backup And Restore
 
-The deploy script creates local daily backups under `/root/backup/deepapi` and
-keeps 14 days. Before accepting users, copy at least one backup off the VPS and
-test restoring `/opt/one-api/data` on a disposable machine.
+`deepapi-backup` uses SQLite online backup, checks integrity, encrypts the
+archive, and refuses a destination on the root filesystem. A successful backup
+does not prove recoverability. At least monthly, run `deepapi-restore-verify`
+and recover a disposable host, then verify login, account/quota state, and a
+non-sensitive test request.
+
+After that drill, an accountable infrastructure owner may update the
+pre-deploy evidence file with PASS results and expiry. Never set PASS merely to
+unblock deployment.
+
+## Monitoring, Failure, And Rollback
+
+The cron health check writes a critical host log entry on failure. Before
+launch, connect host failure logs to an external alert path and prove delivery
+to the on-call owner. A single VPS has no automatic host failover.
+
+The deploy script retains a stopped rollback container until the new container
+passes health checks. Database migrations may still be irreversible, so create
+and verify a backup before changing images and run rollback drills in staging.
 
 ## Incident Checklist
 
-If abuse, billing mismatch, or key leakage is suspected:
+1. Disable affected customer access and keep registration closed.
+2. Stop promotion and payment acceptance if billing, privacy, security, or
+   upstream-terms impact is unclear.
+3. Rotate or revoke affected access in the relevant system without copying
+   sensitive values into tickets or Git.
+4. Preserve only the minimum necessary audit evidence with access controls.
+5. Reconcile gateway usage, provider billing, payments, refunds, and disputes.
+6. Document scope, timeline, owner, notification decision, and recovery proof.
 
-1. Disable the affected user token.
-2. Disable registration.
-3. Rotate upstream provider keys if needed.
-4. Export one-api logs for the affected window.
-5. Compare customer quota, one-api usage, and provider billing.
+The responsible owner has confirmed the previously exposed API access was
+revoked and replaced. Repository evidence cannot independently prove live
+provider state; keep the production-readiness remediation gate and its redacted
+evidence current.

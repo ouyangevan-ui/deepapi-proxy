@@ -1,0 +1,13 @@
+# Copy to /etc/deepapi/predeploy-backup.evidence, set root:root mode 0600,
+# and fill it only after a human-observed offsite transfer and restore drill.
+status=NO-GO
+restore_test_result=NO-GO
+offsite_transfer_result=NO-GO
+restore_verified_at_epoch=0
+offsite_verified_at_epoch=0
+evidence_expires_at_epoch=0
+offsite_mount_target=/replace-with-verified-offsite-mount
+restored_backup_sha256=replace-with-sha256-of-the-backup-used-in-the-restore-drill
+restore_evidence_reference=replace-with-non-sensitive-audit-record-reference
+offsite_evidence_reference=replace-with-non-sensitive-audit-record-reference
+reviewed_by=replace-with-accountable-owner

@@ -1,187 +1,101 @@
-# DeepAPI — 产品需求文档 (PRD)
+# DeepAPI Product Requirements
 
-**版本:** v1.0  
-**作者:** ouyan  
-**日期:** 2025-07-10  
-**状态:** 执行中
+**Status:** Pre-launch, manual onboarding only
+**Commercial pricing:** Not approved; see `COST-MODEL.md`
 
----
+## Product Scope
 
-## 1. 产品愿景
+DeepAPI is an OpenAI-compatible protocol gateway that initially provides
+DeepSeek text models plus a named China vision model for image analysis.
+Protocol compatibility does not mean DeepAPI provides OpenAI models or has an
+official relationship with OpenAI. The initial operating mode is prepaid,
+manually approved accounts.
 
-### 1.1 一句话描述
-做一个面向海外开发者的 AI API 中转服务，前端提供标准 OpenAI API 协议，后端接入国产大模型，利用国内外模型价格差盈利。
+## Public Model Contract
 
-### 1.2 核心价值主张
-> "Same API, 1/5 the price, good enough for 90% of use cases."
+| Public model | Modality | Upstream provider | Upstream model |
+| --- | --- | --- | --- |
+| `deepseek-v4-flash` | Text only | DeepSeek | `deepseek-v4-flash` |
+| `deepseek-v4-pro` | Text only | DeepSeek | `deepseek-v4-pro` |
+| `deepapi-vision` | Image analysis plus text prompt | Approved China vision provider | Pending final selection; MVP recommendation is Alibaba Cloud Model Studio Qwen vision |
 
-| 用户痛点 | 我们的解决方案 |
-|----------|---------------|
-| OpenAI API 太贵（GPT-4o: $2.50/M input） | 国产模型同样接口，$0.50/M input |
-| 个人开发者/小团队预算有限 | $9.9/月起，含 50M tokens |
-| 不需要最强推理能力 | DeepSeek V3 / Qwen 满足日常需求 |
-| 切换模型供应商要改代码 | 完全兼容 OpenAI API 格式，只改 base URL |
+DeepSeek model names are text-only. Image requests using DeepSeek model names
+must fail closed and must not be silently routed to another provider. Customers
+who need image analysis must request `deepapi-vision` explicitly. Automatic
+image detection and model switching is a future option, not an MVP default.
 
-### 1.3 目标用户画像
-- **首要用户：** 欧美个人开发者、Indie Hacker、小创业团队
-- **月预算：** $10-50 的 API 费用
-- **使用场景：** 聊天机器人、内容摘要、翻译、代码辅助、SEO 生成
-- **技术能力：** 会调 API，但不想管基础设施
+DeepSeek's legacy names `deepseek-chat` and `deepseek-reasoner` are not launch
+models. DeepSeek currently maps them to the non-thinking and thinking modes of
+`deepseek-v4-flash`, respectively, and will retire them on
+**2026-07-24 15:59 UTC**. If an existing caller requires migration time, place
+it in an isolated legacy-migration group only until DeepAPI's earlier internal
+cutoff, **2026-07-17 15:59 UTC**. After that cutoff, legacy names fail closed.
 
----
+Official basis, independently verified on 2026-06-11:
 
-## 2. 商业模式
+- `https://api-docs.deepseek.com/`
+- `https://api-docs.deepseek.com/quick_start/pricing`
+- `https://api-docs.deepseek.com/news/news260424`
+- `VISION-MODEL-RESEARCH.md` for China vision model candidates and official
+  source links.
 
-### 2.1 套利逻辑
+## Launch Rules
 
-```
-国产模型采购价:
-  DeepSeek V3:    $0.27  / 1M input tokens
-  通义千问 Qwen:  $0.40  / 1M input tokens
-  硅基流动:       $0.14  / 1M input tokens (免费额度)
+- Open registration stays disabled.
+- Every non-approved channel is disabled or deleted before onboarding.
+- New and launch-approved paid-user groups expose only `deepseek-v4-flash`,
+  `deepseek-v4-pro`, and, after provider approval, `deepapi-vision`.
+- Legacy aliases are never enabled for new users and are removed from every
+  group by 2026-07-17 15:59 UTC.
+- If there are no existing legacy callers, do not create a migration group.
+- A non-allowlisted model request must fail closed and create no upstream use.
+- A DeepSeek text-model request containing image content must fail closed and
+  create no upstream vision use.
+- `deepapi-vision` must pass both image URL and base64 data-URI tests before
+  launch.
+- Vision usage must be disclosed, logged, and billed separately from DeepSeek
+  text usage.
+- No free trial, unlimited plan, or fixed token bundle may be advertised until
+  cost scenarios and abuse limits pass the commercial gate.
+- Every account has a prepaid balance, explicit quota, rate limit, enabled model
+  list, and expiration or renewal date.
+- Provider names and compatibility claims must not imply partnership,
+  endorsement, or rights beyond the applicable upstream terms.
+- Public privacy statements must describe actual gateway, application, billing,
+  security, and provider logging. Never claim "no logs" while logs exist.
 
-DeepAPI 售价:
-  $0.50 / 1M input tokens（加价 85-257%）
+## Functional Requirements
 
-OpenAI 对比价:
-  GPT-4o:         $2.50  / 1M input tokens
-  → DeepAPI 便宜 80%
-```
+| Area | Requirement | Launch gate |
+| --- | --- | --- |
+| Access | Manual paid-user provisioning; registration closed | Account configuration evidence |
+| Billing | Text and vision usage reconciles to upstream billing by model | Cost reconciliation evidence |
+| Abuse | Per-account quotas and rate limits | Paid test-account evidence |
+| Reliability | Local health check, rollback procedure, external alert path | Failure drill evidence |
+| Recovery | Consistent encrypted offsite backup and restore verification | Restore drill evidence |
+| Privacy | Provider, image data handling, retention, deletion, and logs match published policy | Policy approval evidence |
+| Legal | Terms, privacy policy, AUP, refund policy, and upstream resale review for every provider | Legal/business approval |
 
-### 2.2 套餐设计
+## Explicit Non-Goals
 
-| 套餐 | 价格 | 包含 | 目标用户 |
-|------|------|------|---------|
-| **Starter** | $9.9/月 | 50M tokens | 个人开发者测试 |
-| **Pro** | $29/月 | 300M tokens | 小团队生产环境 |
-| **Enterprise** | $99/月 | 无限 | 高用量客户 |
+- Final market pricing or final plan design.
+- Open self-service signup.
+- Claims of high availability on a single VPS.
+- Claims of automatic provider failover unless tested and evidenced.
+- Unnamed provider fallback or hidden rerouting under a DeepSeek model name.
+- Final vision provider approval without dated official docs, pricing,
+  privacy, and resale/proxy review.
+- Production launch based only on repository checks.
 
-### 2.3 财务预测
+## Historical Credential Incident
 
-| 指标 | 保守 | 中等 | 乐观 |
-|------|------|------|------|
-| 月活付费用户 | 10 | 50 | 200 |
-| 月收入 | $99 | $750 | $5,800 |
-| 模型成本 | $20 | $150 | $1,160 |
-| **月毛利** | **$79** | **$600** | **$4,640** |
-| 毛利率 | 80% | 80% | 80% |
+The historical credential exposure is fixed and affected API credentials,
+keys, and tokens have been rotated. Keep only non-sensitive evidence of the
+rotation date, credential category, old-credential invalidation, new-credential
+health check, operator, and reviewer.
 
----
+## Success Criteria
 
-## 3. 技术架构
-
-### 3.1 系统拓扑
-
-```
-海外用户 (开发者)
-    │  HTTPS / OpenAI API 协议
-    ▼
-Cloudflare DNS (域名解析)
-    │
-    ▼
-VPS (RackNerd Los Angeles)
-    ├── Nginx (SSL 终止 + 反向代理 :443→:3000)
-    └── one-api (Docker 容器 :3000)
-          ├── 用户管理 (注册/登录/API Key)
-          ├── 模型路由 (用户选模型 → 映射到国产后端)
-          ├── 计费引擎 (按 token 扣费)
-          └── 渠道池
-                ├── DeepSeek API (api.deepseek.com)
-                ├── 硅基流动 API (api.siliconflow.cn)
-                └── 通义千问 API (dashscope.aliyuncs.com)
-```
-
-### 3.2 技术选型
-
-| 组件 | 选型 | 原因 |
-|------|------|------|
-| API 网关 | [one-api](https://github.com/songquanpeng/one-api) (MIT) | 20k+ star，开箱即用，含用户管理/计费/多模型 |
-| 服务器 | RackNerd VPS ($17.98/年) | 最便宜，洛杉矶机房对欧美低延迟 |
-| 操作系统 | Ubuntu 22.04 LTS | 稳定，Docker 支持好 |
-| 容器 | Docker | 一键部署，不污染宿主机 |
-| 代理 | Nginx + Let's Encrypt | 免费 SSL，高性能反代 |
-| 支付 | 先手动收款（后续接入 Stripe） | v1 不增加复杂度 |
-
-### 3.3 安全边界
-
-```
-公网开放端口:
-  - 22 (SSH，仅密钥登录)
-  - 80 (HTTP → 301 HTTPS)
-  - 443 (HTTPS → Nginx → one-api:3000)
-
-不对外开放:
-  - 3000 (one-api 直接端口，防火墙封禁)
-```
-
----
-
-## 4. 功能清单
-
-### 4.1 MVP（v1.0 — 本次交付）
-
-| 模块 | 功能 | 优先级 |
-|------|------|--------|
-| **网关** | 用户注册 + API Key 管理 | P0 |
-| **网关** | 添加模型渠道（DeepSeek + 硅基流动） | P0 |
-| **网关** | Token 计费 + 余额扣减 | P0 |
-| **网关** | 速率限制 | P0 |
-| **网关** | 调用日志 | P1 |
-| **部署** | Docker 部署 one-api | P0 |
-| **部署** | Nginx SSL 反代 | P0 |
-| **部署** | DNS 配置 | P0 |
-| **测试** | curl 全链路测试 | P0 |
-| **运营** | 英文 Landing Page | P1 |
-| **运营** | 推广文案（Reddit/HN/Indie Hackers） | P1 |
-
-### 4.2 后续版本
-
-| 功能 | 版本 |
-|------|------|
-| Stripe 自动收款 | v1.1 |
-| 多模型自动路由（简单问题走便宜模型，复杂走强模型） | v1.2 |
-| 用量 Dashboard（用户前台） | v1.2 |
-| 渠道健康检测 + 自动切换 | v1.3 |
-| 语义缓存（相同请求直接返回缓存） | v2.0 |
-
----
-
-## 5. 风险与对策
-
-| 风险 | 概率 | 影响 | 对策 |
-|------|------|------|------|
-| DeepSeek 检测转售封 Key | 中 | 高 | 池化多 Key + 轮换；流量分摊到多个模型供应商 |
-| VPS 故障 | 低 | 高 | 定期备份 /opt/one-api/data；准备备用 VPS |
-| 用户信用卡拒付 | 低 | 低 | 预付费模式，余额不足直接拒绝 |
-| 国产模型宕机 | 中 | 中 | 多渠道池，一个挂了自动切另一个 |
-| 海外用户担心隐私 | 中 | 中 | 隐私政策写明无日志存储；未来支持 bring-your-own-key |
-
----
-
-## 6. 里程碑
-
-| 阶段 | 交付物 | 预计耗时 |
-|------|--------|---------|
-| **Phase 0** | Git 仓库 + PRD 文档 | ✅ |
-| **Phase 1** | 技术架构文档 | 待完成 |
-| **Phase 2** | VPS + 域名购买完成 | 待完成 |
-| **Phase 3** | API Key 注册完成 | 待完成 |
-| **Phase 4** | one-api 部署上线 | 待完成 |
-| **Phase 5** | 后台配置 + 全链路测试通过 | 待完成 |
-| **Phase 6** | 推广材料就绪 | 待完成 |
-| **Phase 7** | 代码审查 + 交付 | 待完成 |
-
----
-
-## 7. 成功标准
-
-- [ ] 用户能通过 `https://域名` 注册并获取 API Key
-- [ ] 用户用 curl 调用返回正常回复
-- [ ] 后台能查看调用日志和扣费记录
-- [ ] 单个 DeepSeek API Key 被封后，换 Key 不影响用户
-- [ ] 整套系统单人可维护，日维护时间 < 10 分钟
-
----
-
-**文档版本:** v1.0  
-**下次更新:** Phase 1 架构设计完成后
+Production is GO only when every required row in `PRODUCTION-READINESS.md` has a
+named owner, dated evidence, and a passing result, and
+`MODEL-CONTRACT-OPERATIONS.md` passes. Any missing or stale evidence is NO-GO.

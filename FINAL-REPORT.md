@@ -1,65 +1,72 @@
-# DeepAPI Final Readiness Report
+# DeepAPI Readiness Summary
 
 ## Status
 
-DeepAPI is ready for a first manually onboarded paid user after the VPS
-verification checklist below passes. Do not publish live admin credentials,
-provider keys, or customer API tokens in this repository.
+**Repository hardening implemented; production remains NO-GO pending manual
+evidence.**
 
-## Fixed In Repository
+The initial product is DeepSeek text plus named China vision: public launch
+models are `deepseek-v4-flash`, `deepseek-v4-pro`, and, after provider
+approval, `deepapi-vision`. OpenAI compatibility refers only to the protocol
+and does not imply OpenAI models, endorsement, or partnership.
 
-- one-api is bound to `127.0.0.1:3000`.
-- The one-api Docker image is pinned by digest.
-- Old plaintext Nginx gateway config was removed.
-- Hardened Nginx config is installed by `deploy.sh`.
-- Nginx rate-limit zones are split into `nginx-rate-limit-zones.conf`, which is
-  installed into `/etc/nginx/conf.d/`.
-- Public docs no longer instruct operators to open registration or grant free
-  signup credit.
-- Manual billing and onboarding SOP has been added.
-- A distinct DeepAPI brand asset set has been added under `brand/` to avoid
-  OpenAI-style logo or trade dress confusion.
+The retiring `deepseek-chat` and `deepseek-reasoner` aliases are not launch
+models. DeepAPI's migration cutoff is 2026-07-17 15:59 UTC, one week before
+DeepSeek's official retirement at 2026-07-24 15:59 UTC.
 
-## Manual Items Before First Customer
+## Eliminated In Repository
 
-1. Confirm every token previously committed to Git is revoked in one-api.
-2. Confirm SSH password login is disabled and key-only login works.
-3. Confirm upstream provider keys have been rotated.
-4. Re-run `deploy.sh` on the VPS and verify Nginx reloads cleanly.
-5. Do one restore test from `/root/backup/deepapi`.
-6. Prepare a private customer ledger.
-7. Keep registration closed and create users manually after payment.
-8. Apply the DeepAPI logo from `brand/` in one-api admin settings or on the
-   public landing page before promotion.
+- Deployment no longer overwrites Docker daemon configuration or restarts the
+  Docker daemon.
+- Deployment no longer deletes the previous container before validating the
+  replacement; it retains and restores a rollback container on failure.
+- The Nginx domain is rendered from the validated `DOMAIN` input.
+- Docker logs use per-container rotation.
+- Docker is installed only when absent instead of upgraded on every deploy; the
+  application container prevents privilege escalation and drops Linux
+  capabilities.
+- Online SQLite tar backup was replaced by a consistent SQLite snapshot,
+  integrity check, encrypted offsite destination requirement, checksum, and
+  restore verification.
+- Updating an existing container is blocked unless a fresh encrypted backup
+  passes checksum/mount checks and an unexpired root-only evidence file records
+  a human-observed offsite transfer and successful restore drill.
+- A privacy-safe local health check and scheduled failure signal were added.
+- DeepAPI brand assets are installed by `deploy.sh`; Nginx serves stable asset
+  URLs and overrides one-api's bundled fallback logo and favicon paths.
+- Product and architecture docs no longer approve open registration, unlimited
+  plans, fixed high token bundles, unverified margin/capacity/failover claims,
+  or "no logs" language.
+- Commercial cost and legal/policy/upstream-terms gates now name owners,
+  evidence, and NO-GO conditions.
 
-## First Customer Go/No-Go
+## Remaining Manual Gates
 
-Go only if all commands pass on the VPS:
+Production remains NO-GO until owners provide dated evidence for live access
+revocation/replacement, SSH/network hardening, registration state, billing and
+cost reconciliation, privacy/log retention, external alert delivery, rollback,
+encrypted offsite backup, restore and replacement-host recovery drills, public
+policies, and upstream resale rights.
 
-```bash
-nginx -t
-docker ps --filter name=one-api
-ss -ltnp | grep 3000
-ufw status verbose
-curl -I https://deepapi.click
-```
+The repository cannot automatically prove that storage is truly off-host or
+that recovery works. Deployment therefore requires accountable, expiring manual
+evidence and remains NO-GO if that evidence is absent or stale.
 
-Expected:
+It also remains NO-GO until `MODEL-CONTRACT-OPERATIONS.md` confirms every
+non-approved channel/model/alias is disabled or deleted, both V4 text models
+route to DeepSeek and bill correctly, `deepapi-vision` routes only to the
+approved China vision provider, image URL and base64 tests pass, and
+blocked/expired-alias or DeepSeek-with-image requests return 4xx without
+upstream usage.
 
-- `3000` is only bound to `127.0.0.1`.
-- UFW exposes only SSH, 80, and 443.
-- `curl -I` shows HSTS.
-- Registration is closed.
-- A paid test account can complete one API call and have usage recorded.
+The live one-api brand settings are also a manual gate. Follow
+`brand/APPLICATION.md` to set System Name and Logo, replace old
+Homepage/About/Footer content, and verify the page title, header icon, and
+browser favicon in a private browser window.
 
-## Manual Billing Mode
+The historical credential exposure is fixed and affected API credentials,
+keys, and tokens have been rotated. This confirmation is recorded without
+reproducing sensitive values; retain only redacted rotation, invalidation, and
+health-check evidence.
 
-The first revenue mode is:
-
-1. Receive payment manually.
-2. Record the customer in a private ledger.
-3. Create or enable the user in one-api.
-4. Add prepaid quota.
-5. Send the API base URL, API key, quota, expiry date, and support contact
-   privately.
-6. Review usage and upstream cost daily.
+See `PRODUCTION-READINESS.md` for the controlling checklist.
