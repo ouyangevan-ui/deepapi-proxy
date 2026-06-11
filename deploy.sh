@@ -24,11 +24,11 @@ mkdir -p /opt/one-api/data
 docker run -d \
   --name one-api \
   --restart=always \
-  -p 3000:3000 \
+  -p 127.0.0.1:3000:3000 \
   -v /opt/one-api/data:/data \
   -v /etc/localtime:/etc/localtime:ro \
   -e TZ=Asia/Shanghai \
-  ghcr.io/songquanpeng/one-api:latest
+  ghcr.io/songquanpeng/one-api@sha256:a55fb5181854aa0823cc04797ee875dfc5a953c0deb5e7e7ec39a8148e70cbc3
 
 sleep 3
 echo "one-api 容器已启动，初始账号: root  密码: 123456"
