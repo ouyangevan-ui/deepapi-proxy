@@ -53,6 +53,11 @@ foreach ($required in @(
     "fail closed",
     "no upstream usage",
     "separate vision",
+    "10 requests/minute",
+    "100 requests/hour",
+    "concurrency 1-2",
+    "Test group only",
+    "separate rate-limit and quota policies",
     "2026-07-17 15:59 UTC",
     "2026-07-24 15:59 UTC"
 )) {

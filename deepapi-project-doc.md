@@ -94,6 +94,36 @@ retiring upstream aliases and must not be enabled for new accounts. Follow
 `MODEL-CONTRACT-OPERATIONS.md` for the isolated migration-group policy and the
 earlier DeepAPI cutoff of 2026-07-17 15:59 UTC.
 
+## Rate And Concurrency Policy
+
+Current Nginx edge limits are:
+
+| Path | Nginx limit |
+| --- | --- |
+| `/v1` API | `/v1 average 10r/s/IP with burst 120` |
+| Web/UI | `web average 2r/s/IP with burst 20` |
+
+Nginx is an IP-layer guardrail. It cannot enforce paid plan limits, per-user
+quotas, or per-token abuse controls. Those commercial limits must be configured
+by user, token, and group in one-api; in short, commercial limits must be
+configured by user, token, and group in one-api.
+
+Policy: commercial limits must be configured by user, token, and group in one-api.
+
+Recommended one-api launch settings:
+
+| Account/group | Minute limit | Hour limit | Concurrency | Required policy phrase |
+| --- | ---: | ---: | ---: |
+| Test users | 60/min | 1000/hour | 3 | `Test users: 60/min, 1000/hour, concurrency 3` |
+| Starter | 120/min | 3000/hour | 5 | `Starter: 120/min, 3000/hour, concurrency 5` |
+| Vision | 10/min | 100/hour | 1-2 | `Vision: 10/min, 100/hour, concurrency 1-2` |
+
+Before accepting payment, verify these settings with a test key for an ordinary
+text model and for `deepapi-vision`: allowed requests succeed, concurrent
+requests cap correctly, over-limit requests fail closed, balances are deducted
+only for billable accepted requests, and rejected requests create no upstream
+provider usage.
+
 ## Logging And Privacy
 
 The service is not log-free. one-api usage records, Nginx access/error logs,

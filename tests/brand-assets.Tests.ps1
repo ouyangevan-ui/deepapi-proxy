@@ -124,6 +124,12 @@ foreach ($content in @(
     '$0.66',
     '$0.025',
     '$1.32',
+    'Vision',
+    '$0.18',
+    '$1.50',
+    '1M image tokens',
+    'OCR and document parsing',
+    'How to read the pricing?',
     'deepapi-logo.png'
 )) {
     Assert-True ($pricing.Contains($content)) "Pricing page must contain $content"

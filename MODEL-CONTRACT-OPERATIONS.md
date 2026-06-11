@@ -64,6 +64,8 @@ Do this only after `VISION-MODEL-RESEARCH.md`, `POLICIES-GATE.md`, and
 | Model mapping | `deepapi-vision` -> selected upstream model; no DeepSeek or GPT-style alias |
 | Accepted input | OpenAI-compatible chat `messages[].content[]` with text plus `image_url` |
 | Required tests | One public image URL request and one base64 data-URI request |
+| Access group | Test group only until vision provider, billing, privacy, and abuse evidence are GO |
+| Default rate limits | `deepapi-vision`: 10 requests/minute, 100 requests/hour, concurrency 1-2 |
 | Billing | Separate vision ratio/SKU; no bundling into DeepSeek text pricing |
 | Disclosure | Provider, region, image data handling, logs, and retention disclosed in customer-facing privacy terms |
 
@@ -80,12 +82,16 @@ In system/model/group settings:
    approval, `deepapi-vision`.
 3. Ensure aliases do not reintroduce a non-approved name.
 4. Remove `deepseek-chat` and `deepseek-reasoner` from all normal groups.
-5. Review model ratios separately for DeepSeek V4 Flash, DeepSeek V4 Pro, and
+5. Configure text and vision rate limits separately. `deepapi-vision` must not
+   inherit or consume the same quota bucket as DeepSeek text models. Start with
+   10 requests/minute, 100 requests/hour, and concurrency 1-2 for the vision
+   test group unless the product owner approves a stricter value.
+6. Review model ratios separately for DeepSeek V4 Flash, DeepSeek V4 Pro, and
    `deepapi-vision` against the current provider billing basis.
-6. Verify cache-hit input, cache-miss input, output/reasoning-token, image-token
+7. Verify cache-hit input, cache-miss input, output/reasoning-token, image-token
    or provider-specific vision charges can be reconciled. If one-api cannot
    represent the current billing dimensions accurately, keep production NO-GO.
-7. Do not publish prices until the ratio-to-currency conversion has been tested
+8. Do not publish prices until the ratio-to-currency conversion has been tested
    with real low-value text and vision requests.
 
 ## 6. Legacy Alias Migration
@@ -192,6 +198,12 @@ Go only when:
 - `deepapi-vision` maps to one approved China vision model with clear provider
   and privacy disclosure;
 - image URL and base64 vision tests pass;
+- `deepapi-vision` is initially limited to a test group with 10 requests/minute,
+  100 requests/hour, and concurrency 1-2;
+- text and vision models use separate rate-limit and quota policies, so vision
+  cannot use the text-model allowance;
+- excess concurrent vision requests are rejected by one-api or a documented
+  queueing policy is approved before launch;
 - invalid model names, expired legacy aliases, and DeepSeek-with-image requests
   fail closed with no upstream usage;
 - vision pricing is separate, reconciled, and non-loss-making;

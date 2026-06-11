@@ -19,6 +19,12 @@ records in an approved private system, never in Git.
 - [ ] Payment settled and fraud/abuse review passed.
 - [ ] Registration remains closed; operator created one approved account.
 - [ ] Quota, model access, rate limit, and expiry match the approved offer.
+- [ ] one-api user/token/group limits are configured. Nginx is an IP-layer
+  guardrail; commercial limits must be configured by user, token, and group in
+  one-api.
+- [ ] Test users: 60/min, 1000/hour, concurrency 3.
+- [ ] Starter: 120/min, 3000/hour, concurrency 5.
+- [ ] Vision: 10/min, 100/hour, concurrency 1-2.
 - [ ] Model access is limited to the approved contract:
   `deepseek-v4-flash`, `deepseek-v4-pro`, and, after provider approval,
   `deepapi-vision`.
@@ -26,6 +32,8 @@ records in an approved private system, never in Git.
 - [ ] No new account can see `deepseek-chat` or `deepseek-reasoner`.
 - [ ] Non-sensitive text and vision test requests succeeded and billing
   reconciled.
+- [ ] Test key verification covered an ordinary model and `deepapi-vision`:
+  rate limit, concurrency limit, balance deduction, and over-limit behavior.
 - [ ] Text requests routed to DeepSeek and quota deduction matches the reviewed
   V4 model rules and DeepSeek billing, including cache-hit, cache-miss, and
   output/reasoning usage.

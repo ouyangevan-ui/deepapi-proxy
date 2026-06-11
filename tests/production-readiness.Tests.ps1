@@ -17,6 +17,8 @@ function Read-RepoFile {
 
 $deploy = Read-RepoFile "deploy.sh"
 $nginx = Read-RepoFile "nginx-deepapi.conf"
+$runbook = Read-RepoFile "deepapi-project-doc.md"
+$billing = Read-RepoFile "MANUAL-BILLING-SOP.md"
 
 Assert-True (-not $deploy.Contains("/etc/docker/daemon.json")) "deploy.sh must not overwrite Docker daemon configuration"
 Assert-True (-not $deploy.Contains("systemctl restart docker")) "deploy.sh must not restart the Docker daemon"
@@ -33,6 +35,22 @@ Assert-True ($deploy.Contains("--security-opt no-new-privileges:true")) "one-api
 Assert-True ($deploy.Contains("--cap-drop ALL")) "one-api must drop Linux capabilities"
 Assert-True ($nginx.Contains("__DOMAIN__")) "Nginx config must be rendered from DOMAIN"
 Assert-True (-not $nginx.Contains("deepapi.click")) "Nginx config must not hard-code the production domain"
+Assert-True ((Read-RepoFile "nginx-rate-limit-zones.conf").Contains("zone=api_limit:20m rate=10r/s")) "Nginx API zone must remain 10r/s/IP"
+Assert-True ((Read-RepoFile "nginx-rate-limit-zones.conf").Contains("zone=web_limit:10m rate=2r/s")) "Nginx web zone must remain 2r/s/IP"
+Assert-True ($nginx.Contains("limit_req zone=api_limit burst=120 nodelay")) "Nginx API burst must remain 120"
+Assert-True ($nginx.Contains("limit_req zone=web_limit burst=20 nodelay")) "Nginx web burst must remain 20"
+
+foreach ($requiredLimitText in @(
+    "/v1 average 10r/s/IP with burst 120",
+    "web average 2r/s/IP with burst 20",
+    "Nginx is an IP-layer guardrail",
+    "commercial limits must be configured by user, token, and group in one-api",
+    "Test users: 60/min, 1000/hour, concurrency 3",
+    "Starter: 120/min, 3000/hour, concurrency 5",
+    "Vision: 10/min, 100/hour, concurrency 1-2"
+)) {
+    Assert-True (($runbook + $billing).Contains($requiredLimitText)) "Rate/concurrency policy must document: $requiredLimitText"
+}
 
 foreach ($path in @(
     "ops/backup.sh",
@@ -94,7 +112,15 @@ if (Test-Path -LiteralPath (Join-Path $repo "PRODUCTION-READINESS.md")) {
     Assert-True ($readiness.Contains("MODEL-CONTRACT-OPERATIONS.md")) "Production readiness must use the model-contract operations gate"
     Assert-True ($readiness.Contains("verify-model-contract.sh")) "Production readiness must use the model-contract verifier"
     Assert-True ($readiness.Contains("Vision request acceptance")) "Production readiness must require live vision acceptance tests"
+    Assert-True ($readiness.Contains("Vision rate limits")) "Production readiness must require live vision rate-limit tests"
+    Assert-True ($readiness.Contains("10 requests/minute")) "Production readiness must state the default vision minute limit"
+    Assert-True ($readiness.Contains("100 requests/hour")) "Production readiness must state the default vision hourly limit"
+    Assert-True ($readiness.Contains("concurrency 1-2")) "Production readiness must state the default vision concurrency limit"
+    Assert-True ($readiness.Contains("text and vision quotas are separate")) "Production readiness must require separate text and vision quotas"
     Assert-True ($readiness.Contains("Vision fail-closed behavior")) "Production readiness must require vision fail-closed tests"
+    Assert-True ($readiness.Contains("Rate and concurrency enforcement")) "Production readiness must require rate/concurrency verification"
+    Assert-True ($readiness.Contains("ordinary model and deepapi-vision")) "Rate/concurrency gate must cover ordinary model and deepapi-vision"
+    Assert-True ($readiness.Contains("rate limit, concurrency limit, balance deduction, and over-limit behavior")) "Rate/concurrency gate must verify limits, billing, and over-limit behavior"
     Assert-True (-not $readiness.Contains("DEEPSEEK-ONLY-OPERATIONS.md")) "Production readiness must not reference the old DeepSeek-only gate"
     Assert-True (-not $readiness.Contains("verify-deepseek-only.sh")) "Production readiness must not reference the old DeepSeek-only verifier"
 }
