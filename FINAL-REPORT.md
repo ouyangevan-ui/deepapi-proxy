@@ -11,8 +11,8 @@
 |------|-----|
 | 站点 | `https://deepapi.click` |
 | API | `https://deepapi.click/v1/chat/completions` |
-| 管理后台 | `https://deepapi.click`（root / 123456，登录后改密码） |
-| API Token | `ROTATED_TOKEN_REMOVED`（无限额度） |
+| 管理后台 | `https://deepapi.click`（账号密码见 credentials.txt） |
+| API Token | 见 credentials.txt（无限额度） |
 
 ---
 
@@ -91,10 +91,14 @@
 ## 用户测试命令
 
 ```bash
+使用 credentials.txt 中的 Token 调用 API。示例：
+
+```bash
 curl -X POST https://deepapi.click/v1/chat/completions \
   -H "Content-Type: application/json" \
-  -H "Authorization: Bearer ROTATED_TOKEN_REMOVED" \
+  -H "Authorization: Bearer YOUR_TOKEN" \
   -d '{"model":"Qwen/Qwen2.5-7B-Instruct","messages":[{"role":"user","content":"hello"}],"max_tokens":10}'
+```
 ```
 
 ---
