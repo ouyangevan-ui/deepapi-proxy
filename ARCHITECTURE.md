@@ -68,13 +68,20 @@ operator.
   capabilities.
 - Container replacement retains the stopped previous container as a rollback
   point until the new container passes a local health check.
-- `ops/healthcheck.sh` checks container state, the local status endpoint, and
-  disk usage without printing response bodies.
+- `ops/healthcheck.sh` checks container state, the local status endpoint,
+  optional public HTTPS reachability, and disk usage without printing response
+  bodies. `ops/healthcheck-notify.sh` wraps it with an environment-configured
+  webhook; live webhook secrets stay outside Git.
 - `ops/backup.sh` uses SQLite's online backup operation, runs
-  `PRAGMA integrity_check`, encrypts with `age`, and requires a separately
-  mounted offsite destination.
+  `PRAGMA integrity_check`, encrypts with `age` recipients from
+  `AGE_RECIPIENTS_FILE`, stages under `BACKUP_LOCAL_TMP`, and requires a
+  separately mounted offsite destination.
+- `ops/backup.env.example`, `ops/deepapi-backup.service`, and
+  `ops/deepapi-backup.timer` document the root-only daily encrypted offsite
+  backup installation pattern.
 - `ops/restore-verify.sh` verifies checksum, decryption, archive extraction, and
-  SQLite integrity.
+  SQLite integrity. `ops/RESTORE-DRILL-RUNBOOK.md` requires an isolated
+  one-api recovery drill before production GO.
 - `ops/predeploy-backup-gate.sh` blocks replacement of an existing container
   unless current root-only manual evidence confirms an offsite transfer and
   restore drill; it also creates and checksum-verifies a fresh encrypted backup.
@@ -96,9 +103,9 @@ retention, and document every processor and transfer.
 | Failure | Repository control | Remaining operational requirement |
 | --- | --- | --- |
 | Bad application image | Health-gated container rollback | Run a rollback drill |
-| Process failure | Docker restart policy and health check | Configure external alert delivery |
-| VPS failure | Encrypted offsite backup | Provision replacement host and run recovery drill |
-| SQLite corruption | Consistent snapshot and integrity check | Test restore on a disposable host |
+| Process failure | Docker restart policy, health check, and webhook wrapper sample | Configure external alert delivery |
+| VPS failure | Encrypted offsite backup and systemd timer sample | Provision replacement host and run recovery drill |
+| SQLite corruption | Consistent snapshot, integrity check, and restore drill runbook | Test restore on a disposable host |
 | DeepSeek outage or removed text model name | No hidden text fallback in initial product | Fail closed and report incident |
 | Vision provider outage or removed model name | No hidden reroute under DeepSeek names | Fail closed and report incident |
 | Disk exhaustion | Health-check threshold | External alert and response procedure |

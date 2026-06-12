@@ -56,10 +56,16 @@ foreach ($requiredLimitText in @(
 foreach ($path in @(
     "ops/backup.sh",
     "ops/backup-job.sh",
+    "ops/backup.env.example",
+    "ops/deepapi-backup.service",
+    "ops/deepapi-backup.timer",
     "ops/predeploy-backup-gate.sh",
     "ops/predeploy-backup.evidence.example",
     "ops/restore-verify.sh",
     "ops/healthcheck.sh",
+    "ops/healthcheck-notify.sh",
+    "ops/RESTORE-DRILL-RUNBOOK.md",
+    "ops/MONITORING-RUNBOOK.md",
     "COST-MODEL.md",
     "MODEL-CONTRACT-OPERATIONS.md",
     "VISION-MODEL-RESEARCH.md",
@@ -99,12 +105,77 @@ if (Test-Path -LiteralPath (Join-Path $repo "ops/backup.sh")) {
     Assert-True ($backup.Contains(".backup")) "backup.sh must use SQLite online backup"
     Assert-True ($backup.Contains("integrity_check")) "backup.sh must verify SQLite integrity"
     Assert-True ($backup.Contains("age --encrypt")) "backup.sh must encrypt backups"
+    Assert-True ($backup.Contains("AGE_RECIPIENTS_FILE")) "backup.sh must use an age recipients file"
+    Assert-True ($backup.Contains("--recipients-file")) "backup.sh must encrypt with recipients-file"
+    Assert-True ($backup.Contains("BACKUP_LOCAL_TMP")) "backup.sh must use a configured local temporary directory"
+}
+
+if (Test-Path -LiteralPath (Join-Path $repo "ops/backup.env.example")) {
+    $backupEnv = Read-RepoFile "ops/backup.env.example"
+    foreach ($requiredBackupEnv in @(
+        "BACKUP_OFFSITE_DIR",
+        "AGE_RECIPIENTS_FILE",
+        "BACKUP_LOCAL_TMP",
+        "BACKUP_RETENTION_DAYS",
+        "local tarball or same-disk",
+        "NO-GO for production"
+    )) {
+        Assert-True ($backupEnv.Contains($requiredBackupEnv)) "backup.env.example must document: $requiredBackupEnv"
+    }
+}
+
+if (Test-Path -LiteralPath (Join-Path $repo "ops/deepapi-backup.service")) {
+    $backupService = Read-RepoFile "ops/deepapi-backup.service"
+    Assert-True ($backupService.Contains("/usr/local/sbin/deepapi-backup-job")) "systemd service must run the validated backup job"
+    Assert-True ($backupService.Contains("NoNewPrivileges=true")) "systemd service must include hardening"
+}
+
+if (Test-Path -LiteralPath (Join-Path $repo "ops/deepapi-backup.timer")) {
+    $backupTimer = Read-RepoFile "ops/deepapi-backup.timer"
+    Assert-True ($backupTimer.Contains("OnCalendar=")) "systemd timer must define a schedule"
+    Assert-True ($backupTimer.Contains("Persistent=true")) "systemd timer must catch up missed daily backups"
 }
 
 if (Test-Path -LiteralPath (Join-Path $repo "ops/restore-verify.sh")) {
     $restore = Read-RepoFile "ops/restore-verify.sh"
     Assert-True ($restore.Contains("age --decrypt")) "restore-verify.sh must decrypt a backup"
     Assert-True ($restore.Contains("integrity_check")) "restore-verify.sh must verify restored SQLite integrity"
+}
+
+if (Test-Path -LiteralPath (Join-Path $repo "ops/RESTORE-DRILL-RUNBOOK.md")) {
+    $restoreRunbook = Read-RepoFile "ops/RESTORE-DRILL-RUNBOOK.md"
+    foreach ($requiredRestoreRunbook in @(
+        "Repository tests do not prove live backup readiness",
+        "local tarball is NO-GO",
+        "offsite encrypted backup",
+        "sha256sum --check",
+        "BACKUP_AGE_IDENTITY_FILE",
+        "one-api recoverability",
+        "disposable host"
+    )) {
+        Assert-True ($restoreRunbook.Contains($requiredRestoreRunbook)) "Restore drill runbook must document: $requiredRestoreRunbook"
+    }
+}
+
+if (Test-Path -LiteralPath (Join-Path $repo "ops/healthcheck-notify.sh")) {
+    $notify = Read-RepoFile "ops/healthcheck-notify.sh"
+    Assert-True ($notify.Contains("ALERT_WEBHOOK_URL")) "healthcheck notifier must be webhook-configured by environment"
+    Assert-True ($notify.Contains("Inspect one-api, HTTPS, disk")) "healthcheck notifier must identify one-api/HTTPS/disk failures"
+    Assert-True (-not $notify.Contains("https://")) "healthcheck notifier must not contain a real or placeholder webhook URL"
+}
+
+if (Test-Path -LiteralPath (Join-Path $repo "ops/MONITORING-RUNBOOK.md")) {
+    $monitoringRunbook = Read-RepoFile "ops/MONITORING-RUNBOOK.md"
+    foreach ($requiredMonitoringRunbook in @(
+        "Repository checks do not prove live monitoring",
+        "external alert reaches a responsible person",
+        "one-api, HTTPS, or disk",
+        "ALERT_WEBHOOK_URL",
+        "Never commit or paste the real webhook",
+        "Local-only logs, terminal output, or repository test passes are NO-GO"
+    )) {
+        Assert-True ($monitoringRunbook.Contains($requiredMonitoringRunbook)) "Monitoring runbook must document: $requiredMonitoringRunbook"
+    }
 }
 
 if (Test-Path -LiteralPath (Join-Path $repo "PRODUCTION-READINESS.md")) {
@@ -132,6 +203,18 @@ if (Test-Path -LiteralPath (Join-Path $repo "PRODUCTION-READINESS.md")) {
     Assert-True ($readiness.Contains("Rate and concurrency enforcement")) "Production readiness must require rate/concurrency verification"
     Assert-True ($readiness.Contains("ordinary model and deepapi-vision")) "Rate/concurrency gate must cover ordinary model and deepapi-vision"
     Assert-True ($readiness.Contains("minute limit, hourly limit, concurrency limit, balance/quota deduction, and over-limit behavior")) "Rate/concurrency gate must verify minute/hour/concurrency limits, billing, and over-limit behavior"
+    Assert-True ($readiness.Contains("ops/backup.env.example")) "Production readiness must include backup env sample"
+    Assert-True ($readiness.Contains("ops/deepapi-backup.service")) "Production readiness must include backup systemd service"
+    Assert-True ($readiness.Contains("ops/deepapi-backup.timer")) "Production readiness must include backup systemd timer"
+    Assert-True ($readiness.Contains("local tarball is NO-GO")) "Production readiness must state local tarball backup is NO-GO"
+    Assert-True ($readiness.Contains("ops/RESTORE-DRILL-RUNBOOK.md")) "Production readiness must include restore drill runbook"
+    Assert-True ($readiness.Contains("Automated restore drill")) "Production readiness must name the automated restore drill gate"
+    Assert-True ($readiness.Contains("one-api recoverability")) "Production readiness must require one-api restore recoverability"
+    Assert-True ($readiness.Contains("ops/healthcheck-notify.sh")) "Production readiness must include healthcheck notifier"
+    Assert-True ($readiness.Contains("ops/MONITORING-RUNBOOK.md")) "Production readiness must include monitoring runbook"
+    Assert-True ($readiness.Contains("External monitoring/alerting")) "Production readiness must name external monitoring/alerting"
+    Assert-True ($readiness.Contains("one-api, HTTPS, and disk anomalies")) "Production readiness must require one-api/HTTPS/disk alerting"
+    Assert-True ($readiness.Contains("They do not prove live offsite backup, automated restore drill, external")) "Production readiness must not claim repository tests prove live operations"
     Assert-True ($readiness.Contains("Balance and user self-service")) "Production readiness must include balance and user self-service gate"
     Assert-True ($readiness.Contains("Gateway charge, provider cost, input/output/cache/image usage, balance/quota changes")) "Production readiness must require billing reconciliation dimensions"
     Assert-True (-not $readiness.Contains("DEEPSEEK-ONLY-OPERATIONS.md")) "Production readiness must not reference the old DeepSeek-only gate"

@@ -25,10 +25,10 @@ Production is **NO-GO** until every required gate below has dated evidence.
 | Rate and concurrency enforcement | Product + finance owners | With a test key, exercise an ordinary model and deepapi-vision: `deepapi-everyday`, `deepapi-advanced`, and `deepapi-vision` against one-api user/token/group settings | Redacted request windows, one-api settings screenshots, usage logs, balance/quota deltas, and provider usage check | Configured minute limit, hourly limit, concurrency limit, balance/quota deduction, and over-limit behavior match policy; rejected requests create no upstream usage |
 | Cost model | Business owner | Complete `COST-MODEL.md` scenarios | Approved private workbook | All scenarios pass loss/margin limits |
 | Privacy/logging | Privacy owner | Inventory Nginx, Docker, journal, one-api, payment, text-provider, and vision-provider logs | Approved retention/deletion matrix | Public policy discloses provider, image data handling, retention, deletion, and transfers |
-| Encrypted offsite backup | Infrastructure owner | Run `deepapi-backup`; verify mount with `findmnt -T "$BACKUP_OFFSITE_DIR"` | Encrypted artifact, checksum, separate-mount output, and proof the mount transfers off-host | Fresh backup exists off host |
-| Restore drill | Infrastructure owner | Run `deepapi-restore-verify BACKUP_FILE`, then recover a disposable host | Command output and dated drill notes | Integrity and service test pass |
+| Encrypted offsite backup | Infrastructure owner | Configure root-only `/etc/deepapi/backup.env` from `ops/backup.env.example`, install `ops/deepapi-backup.service` and `ops/deepapi-backup.timer`, run `deepapi-backup`, and verify mount with `findmnt -T "$BACKUP_OFFSITE_DIR"` | Encrypted artifact, checksum, separate-mount output, systemd timer status, and proof the mount transfers off-host | Fresh backup exists off host; local tarball is NO-GO |
+| Automated restore drill | Infrastructure owner | Follow `ops/RESTORE-DRILL-RUNBOOK.md`: run `deepapi-restore-verify BACKUP_FILE`, then recover a disposable directory or alternate host | Command output, restored backup SHA-256, dated drill notes, redacted one-api recovery evidence, and reviewer | Checksum, decryption, SQLite integrity, and one-api recoverability pass |
 | Pre-deploy backup evidence | Infrastructure owner | After the offsite/restore drills, create root-owned mode `0600` `/etc/deepapi/predeploy-backup.evidence` from `ops/predeploy-backup.evidence.example` | Evidence file naming reviewer, restored backup SHA-256, non-sensitive audit references, verified mount, PASS results, and unexpired epoch timestamps | `deepapi-predeploy-backup-gate` passes; otherwise updating an existing container is blocked |
-| Monitoring/alerting | On-call owner | Force health-check failure and confirm external notification | Alert screenshot and response timestamp | Alert reaches a responsible person |
+| External monitoring/alerting | On-call owner | Configure `ops/healthcheck-notify.sh` using `ops/MONITORING-RUNBOOK.md`; force one-api, HTTPS, and disk failures and confirm external notification | Redacted alert screenshot, delivery timestamp, owner acknowledgement, and no webhook secret in Git/logs/screenshots | Alert reaches a responsible person for one-api, HTTPS, and disk anomalies |
 | Upstream outage behavior | Product + on-call owners | Simulate upstream timeout/error in staging and observe customer response and any configured switch | Redacted drill record | Approved graceful-failure or tested-switch behavior |
 | Rollback | Infrastructure owner | Deploy a known-failing candidate in staging and observe rollback | Container/status output and drill notes | Previous version returns healthy |
 | Host failover | Infrastructure owner | Recover replacement VPS from backup and switch test DNS | Timed drill record | Approved RTO/RPO met |
@@ -44,5 +44,7 @@ powershell -NoProfile -ExecutionPolicy Bypass -File .\tests\production-readiness
 git diff --check
 ```
 
-These commands do not replace live, account, financial, privacy, or legal
-evidence.
+These repository tests only verify that gates, samples, and runbooks are present.
+They do not prove live offsite backup, automated restore drill, external
+monitoring/alerting, or one-api per-plan rate limiting has been configured.
+They do not replace live, account, financial, privacy, or legal evidence.
