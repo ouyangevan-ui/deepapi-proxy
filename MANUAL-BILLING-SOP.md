@@ -20,6 +20,8 @@ records in an approved private system, never in Git.
 - [ ] Registration remains closed; operator created one approved account.
 - [ ] Quota/balance unit, model access, rate limit, and expiry match the
   approved offer and `BALANCE-BILLING-LIMITS.md`.
+- [ ] one-api user, token, and group limits were configured using
+  `ONEAPI-LIMITS-RUNBOOK.md`; no live configuration evidence is stored in Git.
 - [ ] If one-api displays quota instead of USD balance, customer-facing copy
   says quota rather than USD balance.
 - [ ] Paid customer has a one-api user login for balance/quota, API Key, and
@@ -42,6 +44,9 @@ records in an approved private system, never in Git.
   reconciled.
 - [ ] Test key verification covered an ordinary model and `deepapi-vision`:
   rate limit, concurrency limit, balance deduction, and over-limit behavior.
+- [ ] `ops/verify-live-limits.example.sh` or equivalent no-secret commands
+  verified minute, hourly, concurrency, balance/quota, illegal-model, and
+  rejected-request behavior.
 - [ ] Text requests routed to DeepSeek and quota deduction matches the reviewed
   V4 model rules and DeepSeek billing, including cache-hit, cache-miss, and
   output/reasoning usage.

@@ -4,6 +4,9 @@ This file defines the commercial acceptance boundary for DeepAPI accounts,
 balances, billing, and rate limits. It is a product and finance gate, not a
 deployment runbook.
 
+For live one-api configuration and no-secret verification commands, use
+`ONEAPI-LIMITS-RUNBOOK.md` and `ops/verify-live-limits.example.sh`.
+
 ## User Console Capabilities
 
 Logged-in paid users must be able to see their own:

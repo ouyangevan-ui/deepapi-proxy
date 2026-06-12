@@ -20,6 +20,7 @@ $nginx = Read-RepoFile "nginx-deepapi.conf"
 $runbook = Read-RepoFile "deepapi-project-doc.md"
 $billing = Read-RepoFile "MANUAL-BILLING-SOP.md"
 $balanceLimits = Read-RepoFile "BALANCE-BILLING-LIMITS.md"
+$oneApiLimits = Read-RepoFile "ONEAPI-LIMITS-RUNBOOK.md"
 
 Assert-True (-not $deploy.Contains("/etc/docker/daemon.json")) "deploy.sh must not overwrite Docker daemon configuration"
 Assert-True (-not $deploy.Contains("systemctl restart docker")) "deploy.sh must not restart the Docker daemon"
@@ -72,6 +73,8 @@ foreach ($path in @(
     "SECURITY-BOUNDARIES.md",
     "PRODUCTION-READINESS.md",
     "BALANCE-BILLING-LIMITS.md",
+    "ONEAPI-LIMITS-RUNBOOK.md",
+    "ops/verify-live-limits.example.sh",
     "POLICIES-GATE.md"
 )) {
     Assert-True (Test-Path -LiteralPath (Join-Path $repo $path)) "$path must exist"
@@ -216,6 +219,9 @@ if (Test-Path -LiteralPath (Join-Path $repo "PRODUCTION-READINESS.md")) {
     Assert-True ($readiness.Contains("one-api, HTTPS, and disk anomalies")) "Production readiness must require one-api/HTTPS/disk alerting"
     Assert-True ($readiness.Contains("They do not prove live offsite backup, automated restore drill, external")) "Production readiness must not claim repository tests prove live operations"
     Assert-True ($readiness.Contains("Balance and user self-service")) "Production readiness must include balance and user self-service gate"
+    Assert-True ($readiness.Contains("one-api package limits")) "Production readiness must include one-api package limits gate"
+    Assert-True ($readiness.Contains("ONEAPI-LIMITS-RUNBOOK.md")) "Production readiness must reference the one-api limits runbook"
+    Assert-True ($readiness.Contains("ops/verify-live-limits.example.sh")) "Production readiness must reference the live limit verification template"
     Assert-True ($readiness.Contains("Gateway charge, provider cost, input/output/cache/image usage, balance/quota changes")) "Production readiness must require billing reconciliation dimensions"
     Assert-True (-not $readiness.Contains("DEEPSEEK-ONLY-OPERATIONS.md")) "Production readiness must not reference the old DeepSeek-only gate"
     Assert-True (-not $readiness.Contains("verify-deepseek-only.sh")) "Production readiness must not reference the old DeepSeek-only verifier"
@@ -254,6 +260,50 @@ foreach ($requiredBillingText in @(
 )) {
     Assert-True ($billing.Contains($requiredBillingText)) "Manual billing SOP must document: $requiredBillingText"
 }
+
+foreach ($requiredOneApiText in @(
+    "This runbook defines the live one-api configuration",
+    "completing this file does not mean the live one-api admin settings have been configured",
+    "one-api login account",
+    "Issuing only an API Key is not enough for self-service",
+    "user, token, and group layers",
+    "average 10r/s/IP with burst",
+    "Test users | test | 60/min | 1000/hour | 3",
+    "Starter | starter | 120/min | 3000/hour | 5",
+    "Vision | vision | 10/min | 100/hour | 1-2",
+    "Vision usage must not consume text quota",
+    "Text usage must not consume vision quota",
+    "Minute limit enforcement",
+    "Hourly limits reject excess requests",
+    "Concurrency limits reject excess requests",
+    "Successful requests deduct the correct balance/quota unit",
+    "Over-limit and rejected requests create no upstream provider usage",
+    "Do not record prompt bodies",
+    "no upstream model names"
+)) {
+    Assert-True ($oneApiLimits.Contains($requiredOneApiText)) "One-api limits runbook must document: $requiredOneApiText"
+}
+
+$liveLimitScript = Read-RepoFile "ops/verify-live-limits.example.sh"
+foreach ($requiredScriptText in @(
+    "TEST_USER_TOKEN",
+    "read -r -s TEST_USER_TOKEN",
+    "Authorization: Bearer",
+    "/v1/models",
+    "/v1/chat/completions",
+    "ILLEGAL_PAYLOAD_FILE",
+    "MINUTE_ATTEMPTS",
+    "HOURLY_ATTEMPTS",
+    "CONCURRENCY_ATTEMPTS",
+    "RUN_LIVE_LIMIT_LOAD",
+    "Token: [hidden]",
+    "Do not store prompt bodies",
+    "Rejected requests must create no upstream usage"
+)) {
+    Assert-True ($liveLimitScript.Contains($requiredScriptText)) "Live limit template must include: $requiredScriptText"
+}
+
+Assert-True (-not $liveLimitScript.Contains("set -x")) "Live limit template must not echo commands or secrets"
 
 if ($failures.Count -gt 0) {
     $failures | ForEach-Object { Write-Output "FAIL: $_" }
