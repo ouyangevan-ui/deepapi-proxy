@@ -28,10 +28,32 @@ following:
 - image URL and base64 requests both succeed and return usage data;
 - unsupported model names and image requests using DeepSeek text model names
   fail closed with no upstream usage;
+- accepted input is limited to OpenAI-compatible `messages[].content[]`
+  containing text plus `image_url.url` values that are either public HTTPS image
+  URLs or base64 data URI images;
+- SSRF protections reject localhost, private ranges, link-local ranges,
+  metadata addresses, redirects to internal addresses, and DNS results that
+  resolve to internal IPs before any upstream use;
+- oversized image URLs, oversized base64 payloads, malformed images, malicious
+  images, excessive image count, and repeated uploads are bounded by request
+  size, model context, quota, rate, and concurrency controls before they can
+  create vision cost explosion;
 - upstream per-token/image-token cost reconciles to DeepAPI billing without
   loss under `COST-MODEL.md`; and
 - provider, region, data handling, logging, and resale/proxy rights are approved
   under `POLICIES-GATE.md`.
+
+## Vision Input Risk Boundary
+
+`deepapi-vision` is the highest-risk input surface. Image URLs can trigger SSRF
+or metadata probing, base64 images can hide very large payloads, malformed or
+malicious images can exercise decoder paths, prompt injection can be embedded
+inside image content, and image-token accounting can create cost spikes. Do not
+accept arbitrary uploads, provider file IDs, HTML pages, non-HTTPS URLs,
+redirects to private networks, or any payload shape outside OpenAI-compatible
+`messages[].content[]` text plus `image_url` parts. Do not log prompts, image
+URLs, base64 bodies, image bytes, credentials, or full provider responses in
+acceptance evidence.
 
 ## one-api Fit
 

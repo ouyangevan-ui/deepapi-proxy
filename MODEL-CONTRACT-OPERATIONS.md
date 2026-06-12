@@ -20,19 +20,21 @@ Launch-approved users may see only these public model names:
 
 | Public model | Modality | Upstream provider | Upstream model |
 | --- | --- | --- | --- |
-| `deepseek-v4-flash` | Text only | DeepSeek | `deepseek-v4-flash` |
-| `deepseek-v4-pro` | Text only | DeepSeek | `deepseek-v4-pro` |
-| `deepapi-vision` | Image analysis plus text prompt | Approved China vision provider | Pending final selection; MVP recommendation is Alibaba Cloud Model Studio Qwen vision |
+| `deepapi-everyday` | Text only | DeepSeek | Admin mapping to approved fast/daily DeepSeek text model |
+| `deepapi-advanced` | Text only | DeepSeek | Admin mapping to approved advanced/reasoning DeepSeek text model |
+| `deepapi-vision` | Image analysis plus text prompt | Approved China vision provider | Admin mapping to approved China vision model; current recommendation `qwen3-vl-flash` |
 
-Do not silently route image requests made with DeepSeek model names to a vision
+Do not silently route image requests made with text model names to a vision
 provider. If a request contains image content and the model is
-`deepseek-v4-flash` or `deepseek-v4-pro`, it must fail closed until a later,
+`deepapi-everyday` or `deepapi-advanced`, it must fail closed until a later,
 separately approved auto-switch policy exists. Auto-detect-and-switch is not an
 MVP default.
 
-`deepseek-chat`, `deepseek-reasoner`, GPT-style aliases, and all other model
-names are not launch models. Requests using non-allowlisted names must return a
-4xx response and create no upstream usage.
+Upstream names such as `deepseek-v4-flash`, `deepseek-v4-pro`,
+`deepseek-chat`, `deepseek-reasoner`, `qwen3-vl-flash`, `qwen-*`, `gpt-*`,
+`claude-*`, `gemini-*`, and all other non-public model names are not launch
+models. Ordinary requests using non-allowlisted names must return a 4xx
+response and create no upstream usage.
 
 ## 3. Configure Text Channels
 
@@ -43,13 +45,14 @@ Create or edit the DeepSeek text channel:
 | Type/provider | DeepSeek |
 | Status | Enabled |
 | Upstream credential | Rotated credential entered privately in admin UI |
-| Models | `deepseek-v4-flash`, `deepseek-v4-pro`; add legacy names temporarily only if an existing-caller migration group is required |
-| Model mapping | Identity mapping only; no GPT-style aliases |
+| Models | Public models `deepapi-everyday` and `deepapi-advanced` |
+| Model mapping | Explicit public-to-upstream mapping only; no GPT-style or upstream-name aliases |
 | Groups | Only groups intended for initial paid users |
 | Priority/weight | Explicitly reviewed; no non-DeepSeek text fallback |
 
-Use the admin UI channel test for both V4 models. Record pass/fail, timestamp,
-channel name, and reviewer without recording request headers or credentials.
+Use the admin UI channel test for both public text models. Record the upstream
+target only in administrator evidence. Record pass/fail, timestamp, channel
+name, and reviewer without recording request headers or credentials.
 
 ## 4. Configure Vision Channel
 
@@ -60,9 +63,9 @@ Do this only after `VISION-MODEL-RESEARCH.md`, `POLICIES-GATE.md`, and
 | --- | --- |
 | Type/provider | one-api OpenAI-compatible/custom channel if staging proves it preserves multimodal content; otherwise the approved narrow shim |
 | Public model | `deepapi-vision` only |
-| Upstream model | One selected China vision model, recorded with dated official docs and rate card |
+| Upstream model | One selected China vision model, recorded with dated official docs and rate card; current recommendation `qwen3-vl-flash` |
 | Model mapping | `deepapi-vision` -> selected upstream model; no DeepSeek or GPT-style alias |
-| Accepted input | OpenAI-compatible chat `messages[].content[]` with text plus `image_url` |
+| Accepted input | OpenAI-compatible chat `messages[].content[]` with text plus `image_url.url` containing a public HTTPS image URL or base64 data URI |
 | Required tests | One public image URL request and one base64 data-URI request |
 | Access group | Test group only until vision provider, billing, privacy, and abuse evidence are GO |
 | Default rate limits | `deepapi-vision`: 10 requests/minute, 100 requests/hour, concurrency 1-2 |
@@ -73,44 +76,54 @@ If one-api cannot preserve the request shape, enforce the allowlist, or produce
 reconcilable usage records, keep production NO-GO and use only a narrow shim for
 `deepapi-vision`. Do not implement a broad self-developed gateway for MVP.
 
+Vision input security rules:
+
+- Reject any `deepapi-vision` request whose content is not OpenAI-compatible
+  `messages[].content[]` with text plus `image_url.url`.
+- Allow only public HTTPS image URLs and base64 data URI images. Reject
+  localhost, private networks, link-local ranges, metadata addresses such as
+  `169.254.169.254`, non-HTTPS URLs, redirects to internal addresses, and DNS
+  results that resolve to internal IPs.
+- Reject or cap oversized image URLs, oversized base64 payloads, malformed
+  images, malicious images, excessive image count, and requests that would
+  exceed model context, quota, request-size, rate, concurrency, or cost limits.
+- Treat image prompt injection as untrusted input. Vision output must not grant
+  tool access, reveal hidden policy, or override the model contract.
+- Do not log prompt text, image URLs, base64 bodies, image bytes, credentials,
+  authorization headers, or full provider responses in tickets, screenshots, or
+  acceptance evidence.
+- Disclose the selected vision provider, region, retention, deletion path, and
+  upstream logging behavior before exposing the model beyond the test group.
+
 ## 5. Restrict Visible Models
 
 In system/model/group settings:
 
 1. Remove all non-approved models from public and paid-user groups.
-2. Expose only `deepseek-v4-flash`, `deepseek-v4-pro`, and, after provider
+2. Expose only `deepapi-everyday`, `deepapi-advanced`, and, after provider
    approval, `deepapi-vision`.
 3. Ensure aliases do not reintroduce a non-approved name.
-4. Remove `deepseek-chat` and `deepseek-reasoner` from all normal groups.
-5. Configure text and vision rate limits separately. `deepapi-vision` must not
+4. Remove upstream names and legacy aliases from all normal groups.
+5. Configure text and vision rate limits separately. This is a separate vision
+   policy from text model access. `deepapi-vision` must not
    inherit or consume the same quota bucket as DeepSeek text models. Start with
    10 requests/minute, 100 requests/hour, and concurrency 1-2 for the vision
    test group unless the product owner approves a stricter value.
-6. Review model ratios separately for DeepSeek V4 Flash, DeepSeek V4 Pro, and
-   `deepapi-vision` against the current provider billing basis.
+6. Review model ratios separately for `deepapi-everyday`, `deepapi-advanced`,
+   and `deepapi-vision` against the current provider billing basis.
 7. Verify cache-hit input, cache-miss input, output/reasoning-token, image-token
    or provider-specific vision charges can be reconciled. If one-api cannot
    represent the current billing dimensions accurately, keep production NO-GO.
 8. Do not publish prices until the ratio-to-currency conversion has been tested
    with real low-value text and vision requests.
 
-## 6. Legacy Alias Migration
+## 6. Upstream Name Rejection
 
-DeepSeek will fully retire `deepseek-chat` and `deepseek-reasoner` on
-**2026-07-24 15:59 UTC**. DeepAPI's internal cutoff is
-**2026-07-17 15:59 UTC**.
-
-- Do not enable legacy aliases for new users.
-- If the inventory finds no existing legacy callers, do not create or retain a
-  migration group.
-- If an existing caller needs migration time, place it in a dedicated
-  `legacy-migration` group with an owner and migration deadline.
-- During the migration window, route legacy names unchanged to DeepSeek:
-  `deepseek-chat` currently selects V4 Flash non-thinking mode and
-  `deepseek-reasoner` selects V4 Flash thinking mode.
-- Do not map legacy aliases to `deepapi-vision` or any non-DeepSeek provider.
-- At the internal cutoff, disable/remove both aliases from all groups. Requests
-  using either old name must return 4xx and create no upstream usage.
+Do not expose upstream model names or retiring aliases to customers. Requests
+using `deepseek-chat`, `deepseek-reasoner`, `deepseek-v4-*`, `qwen-*`, `gpt-*`,
+`claude-*`, `gemini-*`, or any other non-public model name must return 4xx and create no
+upstream usage. There is no public migration path that allows customers to call
+upstream model names directly.
 
 ## 7. Safe Acceptance Commands
 
@@ -131,13 +144,6 @@ names are visible:
 ./verify-model-contract.sh
 ```
 
-During the temporary migration window only, separately check an existing
-migration user:
-
-```bash
-MODEL_POLICY=legacy-migration ./verify-model-contract.sh
-```
-
 Test valid text routes without printing the token:
 
 ```bash
@@ -145,10 +151,10 @@ curl --fail-with-body --silent --show-error \
   "${BASE_URL}/v1/chat/completions" \
   -H "Authorization: Bearer ${TEST_USER_TOKEN}" \
   -H "Content-Type: application/json" \
-  --data '{"model":"deepseek-v4-flash","messages":[{"role":"user","content":"Reply with OK"}],"thinking":{"type":"disabled"},"max_tokens":8}'
+  --data '{"model":"deepapi-everyday","messages":[{"role":"user","content":"Reply with OK"}],"max_tokens":8}'
 ```
 
-Repeat with `deepseek-v4-pro` using the intended thinking mode.
+Repeat with `deepapi-advanced`.
 
 Test vision route with a public image URL:
 
@@ -160,16 +166,29 @@ curl --fail-with-body --silent --show-error \
   --data '{"model":"deepapi-vision","messages":[{"role":"user","content":[{"type":"image_url","image_url":{"url":"https://example.com/non-sensitive-test-image.png"}},{"type":"text","text":"Describe this image briefly."}]}],"max_tokens":64}'
 ```
 
-Repeat with a non-sensitive base64 data-URI image. Record only pass/fail,
-request time, model, channel, usage counters, calculated charge, actual provider
-charge, and reviewer.
+Repeat with a non-sensitive base64 data URI image.
 
-Then send blocked-model tests for a clearly unsupported name, each legacy alias,
-and an image request using a DeepSeek text model. Confirm all are rejected
-without upstream usage.
+Then run blocked-input tests for:
 
-Expected for a launch user and for every user after the internal cutoff: a 4xx
-response. Any 2xx response is NO-GO.
+- an illegal internal URL such as `http://127.0.0.1/`;
+- a metadata address such as `http://169.254.169.254/`;
+- an oversized base64 payload;
+- a malformed or malicious image;
+- an image request sent to `deepapi-everyday` or `deepapi-advanced`;
+- a clearly unsupported model name; and
+- upstream names such as `deepseek-v4-*`, `deepseek-chat`, `deepseek-reasoner`,
+  or `qwen3-vl-flash`.
+
+Force the configured `deepapi-vision` concurrency limit. Excess concurrent
+requests must be rejected by one-api or handled by a documented queueing policy
+that has owner approval.
+
+For every acceptance request, record only pass/fail, request time, public model,
+channel, usage counters, calculated charge, actual provider charge, and
+reviewer. Do not record request/response bodies, image URLs, base64 content, or
+credentials. Expected for blocked inputs, invalid models, text-model-with-image,
+and upstream names: a 4xx response and no upstream usage. Any unexpected 2xx
+response is NO-GO.
 
 ## 8. Verify Routing and Billing in Admin UI
 

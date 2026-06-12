@@ -15,21 +15,21 @@ manually approved accounts.
 
 | Public model | Modality | Upstream provider | Upstream model |
 | --- | --- | --- | --- |
-| `deepseek-v4-flash` | Text only | DeepSeek | `deepseek-v4-flash` |
-| `deepseek-v4-pro` | Text only | DeepSeek | `deepseek-v4-pro` |
-| `deepapi-vision` | Image analysis plus text prompt | Approved China vision provider | Pending final selection; MVP recommendation is Alibaba Cloud Model Studio Qwen vision |
+| `deepapi-everyday` | Text only | DeepSeek | Admin mapping to DeepSeek fast/daily text model |
+| `deepapi-advanced` | Text only | DeepSeek | Admin mapping to DeepSeek advanced/reasoning model |
+| `deepapi-vision` | Image analysis plus text prompt | Approved China vision provider | Admin mapping to approved China vision model; current recommendation `qwen3-vl-flash` |
 
-DeepSeek model names are text-only. Image requests using DeepSeek model names
-must fail closed and must not be silently routed to another provider. Customers
-who need image analysis must request `deepapi-vision` explicitly. Automatic
-image detection and model switching is a future option, not an MVP default.
+Only the three `deepapi-*` names may be visible to ordinary users or API
+clients. Upstream names are private administrator mapping records and must not
+appear in `/v1/models`, customer onboarding, public pricing pages, SDK examples,
+or ordinary API requests. DeepAPI text models are text-only; customers who need
+image analysis must request `deepapi-vision` explicitly. Automatic image
+detection and model switching is a future option, not an MVP default.
 
-DeepSeek's legacy names `deepseek-chat` and `deepseek-reasoner` are not launch
-models. DeepSeek currently maps them to the non-thinking and thinking modes of
-`deepseek-v4-flash`, respectively, and will retire them on
-**2026-07-24 15:59 UTC**. If an existing caller requires migration time, place
-it in an isolated legacy-migration group only until DeepAPI's earlier internal
-cutoff, **2026-07-17 15:59 UTC**. After that cutoff, legacy names fail closed.
+The upstream names `deepseek-chat`, `deepseek-reasoner`, `deepseek-v4-*`,
+`qwen-*`, `gpt-*`, `claude-*`, and `gemini-*` are not public models. Ordinary
+requests using any non-allowlisted name must return 4xx and create no upstream
+usage.
 
 Official basis, independently verified on 2026-06-11:
 
@@ -43,13 +43,12 @@ Official basis, independently verified on 2026-06-11:
 
 - Open registration stays disabled.
 - Every non-approved channel is disabled or deleted before onboarding.
-- New and launch-approved paid-user groups expose only `deepseek-v4-flash`,
-  `deepseek-v4-pro`, and, after provider approval, `deepapi-vision`.
-- Legacy aliases are never enabled for new users and are removed from every
-  group by 2026-07-17 15:59 UTC.
-- If there are no existing legacy callers, do not create a migration group.
+- New and launch-approved paid-user groups expose only `deepapi-everyday`,
+  `deepapi-advanced`, and `deepapi-vision`.
+- Upstream provider/model names are visible only to administrators in mapping,
+  billing, provider approval, and incident records.
 - A non-allowlisted model request must fail closed and create no upstream use.
-- A DeepSeek text-model request containing image content must fail closed and
+- A DeepAPI text-model request containing image content must fail closed and
   create no upstream vision use.
 - `deepapi-vision` must pass both image URL and base64 data-URI tests before
   launch.

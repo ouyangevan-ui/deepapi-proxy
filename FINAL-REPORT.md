@@ -5,14 +5,14 @@
 **Repository hardening implemented; production remains NO-GO pending manual
 evidence.**
 
-The initial product is DeepSeek text plus named China vision: public launch
-models are `deepseek-v4-flash`, `deepseek-v4-pro`, and, after provider
-approval, `deepapi-vision`. OpenAI compatibility refers only to the protocol
-and does not imply OpenAI models, endorsement, or partnership.
+The initial product uses public model names: `deepapi-everyday`,
+`deepapi-advanced`, and, after provider approval, `deepapi-vision`. OpenAI
+compatibility refers only to the protocol and does not imply OpenAI models,
+endorsement, or partnership.
 
-The retiring `deepseek-chat` and `deepseek-reasoner` aliases are not launch
-models. DeepAPI's migration cutoff is 2026-07-17 15:59 UTC, one week before
-DeepSeek's official retirement at 2026-07-24 15:59 UTC.
+Upstream names are not launch models. Ordinary users must never see or call
+`deepseek-*`, `qwen-*`, `gpt-*`, `claude-*`, or `gemini-*`; those names are
+administrator-only mapping and provider records.
 
 ## Eliminated In Repository
 
@@ -53,11 +53,10 @@ that recovery works. Deployment therefore requires accountable, expiring manual
 evidence and remains NO-GO if that evidence is absent or stale.
 
 It also remains NO-GO until `MODEL-CONTRACT-OPERATIONS.md` confirms every
-non-approved channel/model/alias is disabled or deleted, both V4 text models
-route to DeepSeek and bill correctly, `deepapi-vision` routes only to the
-approved China vision provider, image URL and base64 tests pass, and
-blocked/expired-alias or DeepSeek-with-image requests return 4xx without
-upstream usage.
+non-approved channel/model/alias is disabled or deleted, both public text
+models route to DeepSeek and bill correctly, `deepapi-vision` routes only to
+the approved China vision provider, image URL and base64 tests pass, and
+upstream-name or text-with-image requests return 4xx without upstream usage.
 
 The live one-api brand settings are also a manual gate. Follow
 `brand/APPLICATION.md` to set System Name and Logo, replace old

@@ -86,13 +86,12 @@ gateway deductions, and upstream invoice cost.
 Do not advertise any plan until the private cost model passes every scenario in
 `COST-MODEL.md` and policies pass `POLICIES-GATE.md`.
 
-Launch accounts expose only `deepseek-v4-flash`, `deepseek-v4-pro`, and,
-after provider approval, `deepapi-vision`. DeepSeek models are text only; image
-analysis requires the explicit `deepapi-vision` model and must never be hidden
-behind a DeepSeek model name. `deepseek-chat` and `deepseek-reasoner` are
-retiring upstream aliases and must not be enabled for new accounts. Follow
-`MODEL-CONTRACT-OPERATIONS.md` for the isolated migration-group policy and the
-earlier DeepAPI cutoff of 2026-07-17 15:59 UTC.
+Launch accounts expose only `deepapi-everyday`, `deepapi-advanced`, and,
+after provider approval, `deepapi-vision`. DeepAPI text models are text only;
+image analysis requires the explicit `deepapi-vision` model and must never be
+hidden behind a text model name. Upstream provider model names must not be
+visible to launch users. Follow `MODEL-CONTRACT-OPERATIONS.md` for the public
+model contract and fail-closed policy.
 
 ## Rate And Concurrency Policy
 

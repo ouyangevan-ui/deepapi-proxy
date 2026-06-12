@@ -7,10 +7,13 @@ This is a calculation framework, not final pricing.
 Model every upstream model and customer plan separately using dated provider
 invoices or published rate cards:
 
-For the current product, model `deepseek-v4-flash`, `deepseek-v4-pro`, and
-`deepapi-vision` as separate SKUs. Treat `deepapi-vision` as a separate vision
-SKU. Do not price or launch using the retiring `deepseek-chat` or
-`deepseek-reasoner` names. Do not bundle vision usage into a DeepSeek text price
+For the current product, model `deepapi-everyday`, `deepapi-advanced`, and
+`deepapi-vision` as separate public SKUs, including a separate vision SKU and a
+separate vision cost scenario.
+Privately map each public SKU to its
+approved upstream model for cost modeling and provider reconciliation. Do not
+price or launch using upstream names such as `deepseek-*`, `qwen-*`, `gpt-*`,
+`claude-*`, or `gemini-*`. Do not bundle vision usage into a DeepSeek text price
 unless the workbook proves the bundle cannot lose money under maximum-quota and
 abuse scenarios.
 
@@ -25,6 +28,7 @@ abuse scenarios.
 | Taxes, currency conversion, and payout fees | Percent and USD |
 | VPS, monitoring, backup storage, support, and labor | USD per month |
 | Fraud/abuse reserve and provider price-change reserve | Percent |
+| Gateway charge, provider cost, balance/quota delta, and customer-visible unit | Request/account ledger fields |
 
 ## Required Formula
 
@@ -58,11 +62,17 @@ contribution_margin =
 Calculate typical, high-output, maximum-quota, abuse, refund, chargeback, and
 provider-price-increase scenarios. Include output tokens and actual upstream
 invoice reconciliation; gateway quota units alone are not evidence of cost.
+Reconcile gateway charge, provider cost, cache-hit input, cache-miss input,
+output/reasoning tokens, image units, starting balance/quota, ending
+balance/quota, and any manual credit or refund.
 Run every scenario separately for V4 Flash and V4 Pro, and verify thinking-mode
 usage does not bypass output/reasoning-token billing.
 Run every scenario separately for `deepapi-vision`, including small images,
 large images, repeated base64 uploads, public URL fetches, retries, failed
 requests, and provider-side image-token accounting.
+Apply the user-console and commercial-limit boundaries in
+`BALANCE-BILLING-LIMITS.md`; do not model Nginx IP throttling as a paid-package
+limit.
 
 **Owner:** Business owner
 **Evidence:** Dated private workbook plus provider invoice reconciliation

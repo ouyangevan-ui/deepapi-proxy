@@ -19,6 +19,7 @@ $deploy = Read-RepoFile "deploy.sh"
 $nginx = Read-RepoFile "nginx-deepapi.conf"
 $runbook = Read-RepoFile "deepapi-project-doc.md"
 $billing = Read-RepoFile "MANUAL-BILLING-SOP.md"
+$balanceLimits = Read-RepoFile "BALANCE-BILLING-LIMITS.md"
 
 Assert-True (-not $deploy.Contains("/etc/docker/daemon.json")) "deploy.sh must not overwrite Docker daemon configuration"
 Assert-True (-not $deploy.Contains("systemctl restart docker")) "deploy.sh must not restart the Docker daemon"
@@ -62,7 +63,9 @@ foreach ($path in @(
     "COST-MODEL.md",
     "MODEL-CONTRACT-OPERATIONS.md",
     "VISION-MODEL-RESEARCH.md",
+    "SECURITY-BOUNDARIES.md",
     "PRODUCTION-READINESS.md",
+    "BALANCE-BILLING-LIMITS.md",
     "POLICIES-GATE.md"
 )) {
     Assert-True (Test-Path -LiteralPath (Join-Path $repo $path)) "$path must exist"
@@ -109,9 +112,17 @@ if (Test-Path -LiteralPath (Join-Path $repo "PRODUCTION-READINESS.md")) {
     Assert-True ($readiness.Contains("Owner")) "Production readiness gates must name owners"
     Assert-True ($readiness.Contains("Evidence")) "Production readiness gates must require evidence"
     Assert-True ($readiness.Contains("NO-GO")) "Production readiness gates must define NO-GO conditions"
+    Assert-True ($readiness.Contains("SECURITY-BOUNDARIES.md")) "Production readiness must include the backend security boundaries gate"
+    Assert-True ($readiness.Contains("Backend security boundaries")) "Production readiness must name the backend security boundaries gate"
     Assert-True ($readiness.Contains("MODEL-CONTRACT-OPERATIONS.md")) "Production readiness must use the model-contract operations gate"
     Assert-True ($readiness.Contains("verify-model-contract.sh")) "Production readiness must use the model-contract verifier"
     Assert-True ($readiness.Contains("Vision request acceptance")) "Production readiness must require live vision acceptance tests"
+    Assert-True ($readiness.Contains("Vision input security")) "Production readiness must require vision input security tests"
+    Assert-True ($readiness.Contains("illegal internal URL")) "Vision input gate must test internal URL rejection"
+    Assert-True ($readiness.Contains("metadata address")) "Vision input gate must test metadata-address rejection"
+    Assert-True ($readiness.Contains("oversized base64")) "Vision input gate must test oversized base64 rejection"
+    Assert-True ($readiness.Contains("malformed image")) "Vision input gate must test malformed image rejection"
+    Assert-True ($readiness.Contains("no bodies, image URLs, base64, or credentials")) "Vision evidence must exclude sensitive request data"
     Assert-True ($readiness.Contains("Vision rate limits")) "Production readiness must require live vision rate-limit tests"
     Assert-True ($readiness.Contains("10 requests/minute")) "Production readiness must state the default vision minute limit"
     Assert-True ($readiness.Contains("100 requests/hour")) "Production readiness must state the default vision hourly limit"
@@ -120,9 +131,45 @@ if (Test-Path -LiteralPath (Join-Path $repo "PRODUCTION-READINESS.md")) {
     Assert-True ($readiness.Contains("Vision fail-closed behavior")) "Production readiness must require vision fail-closed tests"
     Assert-True ($readiness.Contains("Rate and concurrency enforcement")) "Production readiness must require rate/concurrency verification"
     Assert-True ($readiness.Contains("ordinary model and deepapi-vision")) "Rate/concurrency gate must cover ordinary model and deepapi-vision"
-    Assert-True ($readiness.Contains("rate limit, concurrency limit, balance deduction, and over-limit behavior")) "Rate/concurrency gate must verify limits, billing, and over-limit behavior"
+    Assert-True ($readiness.Contains("minute limit, hourly limit, concurrency limit, balance/quota deduction, and over-limit behavior")) "Rate/concurrency gate must verify minute/hour/concurrency limits, billing, and over-limit behavior"
+    Assert-True ($readiness.Contains("Balance and user self-service")) "Production readiness must include balance and user self-service gate"
+    Assert-True ($readiness.Contains("Gateway charge, provider cost, input/output/cache/image usage, balance/quota changes")) "Production readiness must require billing reconciliation dimensions"
     Assert-True (-not $readiness.Contains("DEEPSEEK-ONLY-OPERATIONS.md")) "Production readiness must not reference the old DeepSeek-only gate"
     Assert-True (-not $readiness.Contains("verify-deepseek-only.sh")) "Production readiness must not reference the old DeepSeek-only verifier"
+}
+
+foreach ($requiredBalanceText in @(
+    "one-api quota or balance value, using the exact unit exposed by one-api",
+    "If one-api displays quota instead of a USD balance",
+    "Customers who receive only an API Key and no one-api login cannot self-serve",
+    "provisioned as one-api user accounts",
+    '`/v1` average 10r/s/IP with burst 120',
+    "configured in one-api at the user, token, and group layers",
+    "Test users | 60/min | 1000/hour | 3",
+    "Starter | 120/min | 3000/hour | 5",
+    "Vision | 10/min | 100/hour | 1-2",
+    "ordinary model",
+    "deepapi-vision",
+    "Minute limit enforcement",
+    "Hourly limit enforcement",
+    "Concurrency enforcement",
+    "Balance/quota deduction after successful requests",
+    "Rejected requests create no upstream usage",
+    "Gateway charge by account, token, group, model, and request",
+    "Input tokens, output/reasoning tokens, cache-hit input, cache-miss input",
+    "Starting balance/quota",
+    "Difference between gateway charge and provider bill"
+)) {
+    Assert-True ($balanceLimits.Contains($requiredBalanceText)) "Balance/billing/limit gate must document: $requiredBalanceText"
+}
+
+foreach ($requiredBillingText in @(
+    "one-api quota or balance unit",
+    "customer cannot self-serve a",
+    "cache-hit input, cache-miss input, image units",
+    "Confirm over-limit and rejected requests created no upstream"
+)) {
+    Assert-True ($billing.Contains($requiredBillingText)) "Manual billing SOP must document: $requiredBillingText"
 }
 
 if ($failures.Count -gt 0) {

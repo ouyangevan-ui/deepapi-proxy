@@ -14,27 +14,25 @@ not be described as highly available.
 
 ## Provider And Model Contract
 
-DeepSeek is the only enabled text provider for the initial product.
-one-api must expose and route `deepseek-v4-flash` and `deepseek-v4-pro` only
-for text requests. Image analysis is exposed only as the named public model
-`deepapi-vision`, mapped to one approved China vision provider after
+Ordinary users and API clients may see only `deepapi-everyday`,
+`deepapi-advanced`, and `deepapi-vision`. Upstream model names appear only in
+administrator mapping, provider approval, billing, and incident records.
+`deepapi-everyday` maps to the approved DeepSeek fast/daily text model,
+`deepapi-advanced` maps to the approved DeepSeek advanced/reasoning model, and
+`deepapi-vision` maps to one approved China vision model after
 `VISION-MODEL-RESEARCH.md`, `COST-MODEL.md`, and `POLICIES-GATE.md` are GO.
 GPT-style aliases and all non-approved channels/models are disabled or deleted.
 OpenAI compatibility describes the protocol only; it does not imply OpenAI
 models, feature parity, endorsement, or partnership.
 
-DeepSeek model names must not hide a non-DeepSeek upstream. If a request with
-`deepseek-v4-flash` or `deepseek-v4-pro` contains image content, the gateway
+Public DeepAPI names must not hide a different modality. If a request with
+`deepapi-everyday` or `deepapi-advanced` contains image content, the gateway
 must fail closed. Automatic image detection and switching is intentionally not
 part of the MVP contract.
 
-`deepseek-chat` and `deepseek-reasoner` are upstream legacy aliases scheduled
-for retirement on 2026-07-24 15:59 UTC. They are not public launch models.
-Existing callers may temporarily use an isolated migration group until the
-earlier DeepAPI cutoff of 2026-07-17 15:59 UTC. Do not remap both aliases to a
-generic V4 model unless the gateway can inject and verify the correct thinking
-mode; until cutoff, use upstream identity routing for the legacy aliases. After
-cutoff, remove them and fail closed.
+Requests using non-public model names, including `deepseek-chat`,
+`deepseek-reasoner`, `deepseek-v4-*`, `qwen-*`, `gpt-*`, `claude-*`, and
+`gemini-*`, fail closed with 4xx and no upstream usage for ordinary users.
 
 Live one-api channel, group, model, mapping, and ratio settings are operator
 controlled. They must be configured and verified with
@@ -45,6 +43,22 @@ If the pinned one-api image cannot preserve OpenAI-compatible multimodal
 message content, enforce the allowlist, or emit reconcilable usage for the
 chosen vision provider, keep production NO-GO. The approved fallback is only a
 narrow `deepapi-vision` shim in front of one-api, not a broad custom gateway.
+
+## Vision Input Security Boundary
+
+`deepapi-vision` accepts only OpenAI-compatible `messages[].content[]` with text
+and `image_url.url` parts. The URL value must be either a public HTTPS image URL
+or a base64 data URI image. Text models receiving any image content return 4xx
+and do not auto-switch.
+
+The gateway or approved narrow shim must reject SSRF and cost-abuse inputs
+before upstream use: localhost, private ranges, link-local ranges, cloud
+metadata addresses, DNS results or redirects to internal IPs, non-HTTPS URLs,
+oversized image URLs, oversized base64 payloads, malformed images, malicious
+images, excessive image count, and requests that exceed the vision model's
+context, quota, rate, or concurrency policy. Prompt injection embedded in images
+is treated as untrusted model input, not as instructions to the gateway or
+operator.
 
 ## Controls Implemented In Repository
 
